@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+::view-transition-old(root) {
+  animation: none;
+  z-index: 1;
+}
+::view-transition-new(root) {
+  animation: wipe-down-soft 1.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+  z-index: 2;
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 60%, transparent 100%);
+  -webkit-mask-size: 100% 300%;
+  mask-size: 100% 300%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+@keyframes wipe-down-soft {
+  from {
+    -webkit-mask-position: 0 100%;
+    mask-position: 0 100%;
+  }
+  to {
+    -webkit-mask-position: 0 0%;
+    mask-position: 0 0%;
+  }
+}
+
+:root {
+  --background: #faf9f6; /* Warm White */
+  --foreground: #0a0a0a; /* Deep Black */
+  --charcoal: #333333;
+  --gold: #d4af37; /* Champagne Gold */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-charcoal: var(--charcoal);
+  --color-gold: var(--gold);
+  
+  --font-sans: var(--font-inter), sans-serif;
+  --font-serif: var(--font-playfair), serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a; /* Deep Black */
+    --foreground: #faf9f6; /* Warm White */
+  }
+}
+
+/* Force dark theme explicitly */
+html.dark {
+  --background: #0a0a0a !important;
+  --foreground: #faf9f6 !important;
+}
+
+/* Force light theme explicitly */
+html.light, html:not(.dark) {
+  --background: #faf9f6 !important;
+  --foreground: #0a0a0a !important;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+}
+
+/* Base utility for 1440px container */
+.container-lux {
+  width: 100%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+/* Luxury Animated Backgrounds & Effects */
+.bg-noise {
+  position: relative;
+}
+
+.bg-noise::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Highly refined glassmorphism */
+.lux-glass {
+  background: rgba(20, 20, 20, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.lux-glass-card {
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.lux-glass-card:hover {
+  background: rgba(15, 15, 15, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transform: translateY(-4px);
+}
+
+/* Subtle Shimmer for borders/inputs */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.border-shimmer {
+  position: relative;
+}
+
+.border-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(212,175,55,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite linear;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* --- DYNAMIC & MOVING EFFECTS --- */
+
+@keyframes fluid-bg {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 1. Premium Perfume Wallpaper for Sections (Cross-fade Setup) */
+.bg-perfume-main {
+  position: relative;
+  z-index: 0;
+  background-color: var(--background);
+}
+
+/* Dark Mode Background Layer */
+.bg-perfume-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: #050505;
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0.8), rgba(0,0,0,0.95)), url("https://images.unsplash.com/photo-1544006593-1a0b9255782d?q=80&w=2800&auto=format&fit=crop");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  z-index: -2;
+  opacity: 1;
+  pointer-events: none;
+}
+html.light .bg-perfume-main::before, html:not(.dark) .bg-perfume-main::before {
+  opacity: 0;
+}
+
+/* Light Mode Background Layer */
+.bg-perfume-main::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: #faf9f6;
+  background-image: linear-gradient(to bottom, rgba(250, 249, 246, 0.7), rgba(250, 249, 246, 0.85)), url("/light-mode.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  z-index: -1;
+  opacity: 0;
+  pointer-events: none;
+}
+html.light .bg-perfume-main::after, html:not(.dark) .bg-perfume-main::after {
+  opacity: 1;
+}
+
+/* 2. Text Gradients */
+.text-gradient-gold {
+  background: linear-gradient(to right, #d4af37, #ffffff, #d4af37, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 300% auto;
+  animation: fluid-bg 6s linear infinite;
+  padding-bottom: 0.15em; /* Fixes cut-off descenders on letters like p, y, g */
+  margin-bottom: -0.15em;
+}
+
+html:not(.dark) .text-gradient-gold {
+  background-image: linear-gradient(to right, #000000, #888888, #000000, #000000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 3. Reverted Unified Box Style (Gradient Background only) */
+.lux-glass-card {
+  /* Subtle static gold/dark gradient background for the boxes */
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.9) 0%, rgba(30, 24, 10, 0.8) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  border-radius: 12px;
+  transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.lux-glass-card:hover {
+  background: linear-gradient(135deg, rgba(25, 25, 25, 0.95) 0%, rgba(40, 32, 15, 0.85) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  transform: translateY(-4px);
+}
+
+html:not(.dark) .lux-glass-card {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(255, 255, 255, 0.6) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) .lux-glass-card:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(255, 255, 255, 0.8) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(212, 175, 55, 0.1);
+}
+
+/* Base lux-glass light mode variant */
+html:not(.dark) .lux-glass {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
