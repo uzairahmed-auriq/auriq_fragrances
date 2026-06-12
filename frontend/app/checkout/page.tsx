@@ -1,33 +1,131 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, ShieldCheck, CreditCard, Truck, CheckCircle2, Smartphone, User, UserX } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import { useCart } from "../context/CartContext";
+import { createOrder } from "../services/orderService";
+import { API_URL } from "../utils/api";
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { cartItems, cartTotal, refreshCart } = useCart();
   const [isGuest, setIsGuest] = useState(true);
   const [selectedAddress, setSelectedAddress] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod" | "jazzcash" | "easypaisa">("card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [orderId, setOrderId] = useState<number | null>(null);
 
-  const handleCheckout = (e: React.FormEvent) => {
+  const [discountCodeInput, setDiscountCodeInput] = useState("");
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; type: string; value: string; discountAmount: number; newTotal: number } | null>(null);
+  const [discountError, setDiscountError] = useState("");
+  const [isValidatingDiscount, setIsValidatingDiscount] = useState(false);
+
+  // Form states
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [street, setStreet] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [province, setProvince] = useState("Sindh");
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('auriqAccessToken');
+    if (token) {
+      setIsGuest(false);
+      // In a real app, we would fetch and set default address here
+    }
+  }, []);
+
+  const shippingFee = cartTotal > 20000 ? 0 : 500;
+  const discountAmount = appliedDiscount?.discountAmount || 0;
+  const total = cartTotal + shippingFee - discountAmount;
+
+  const handleApplyDiscount = async () => {
+    if (!discountCodeInput.trim()) return;
+    setIsValidatingDiscount(true);
+    setDiscountError("");
+    try {
+      const token = localStorage.getItem('auriqAccessToken');
+      const response = await fetch(`${API_URL}/orders/validate-discount`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { "Authorization": `Bearer ${token}` })
+        },
+        body: JSON.stringify({ code: discountCodeInput, cartTotal })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAppliedDiscount(data.data);
+      } else {
+        setDiscountError(data.message || "Invalid discount code");
+        setAppliedDiscount(null);
+      }
+    } catch (error) {
+      setDiscountError("Failed to apply discount");
+      setAppliedDiscount(null);
+    } finally {
+      setIsValidatingDiscount(false);
+    }
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCodeInput("");
+    setDiscountError("");
+  };
+
+  const formatPrice = (amount: number) => {
+    return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(amount).replace('PKR', 'Rs.');
+  };
+
+  const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
-    // Simulate network request
-    setTimeout(() => {
-      setIsProcessing(false);
-      if (isGuest) {
-        router.push("/invoice");
+
+    try {
+      const orderData = {
+        guestInfo: isGuest ? {
+          email,
+          name: `${firstName} ${lastName}`.trim(),
+          phone
+        } : undefined,
+        shippingAddress: {
+          name: `${firstName} ${lastName}`.trim() || 'John Doe', // fallback for logged in placeholder
+          phone: phone || '0000000',
+          street: street || '123 Main St',
+          city: city || 'Karachi',
+          province: province || 'Sindh',
+          postal_code: postalCode || '74000'
+        },
+        paymentMethod: paymentMethod === 'card' ? 'CARD' : 'COD',
+        notes: '',
+        discountCode: appliedDiscount?.code || undefined
+      };
+
+      const res = await createOrder(orderData);
+      
+      if (res.success) {
+        setOrderId(res.data.id);
+        setIsSuccess(true);
+        await refreshCart(); // Clear cart context
       } else {
-        router.push("/orders?loyalty=true");
+        alert(res.message || "Failed to create order");
       }
-    }, 2000);
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Checkout failed");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (isSuccess) {
@@ -43,13 +141,13 @@ export default function CheckoutPage() {
               </div>
               <h1 className="text-4xl font-serif text-gradient-gold font-bold tracking-widest mb-4">Order Confirmed</h1>
               <p className="text-foreground/80 font-medium tracking-wide mb-8">
-                Thank you for your purchase. Your order #AUR-{Math.floor(Math.random() * 100000)} has been received and is currently being processed.
+                Thank you for your purchase. Your order #AUR-{orderId || Math.floor(Math.random() * 100000)} has been received and is currently being processed.
               </p>
               <div className="flex gap-4 w-full max-w-sm">
-                <Link href="/orders" className="flex-1 bg-transparent border border-foreground/20 text-foreground py-4 text-sm font-bold tracking-widest hover:border-gold hover:text-gold transition-colors uppercase">
+                <Link href={isGuest ? "/invoice" : "/orders?loyalty=true"} className="flex-1 bg-transparent border border-foreground/20 text-foreground py-4 text-sm font-bold tracking-widest hover:border-gold hover:text-gold transition-colors uppercase flex justify-center items-center">
                   View Order
                 </Link>
-                <Link href="/collections" className="flex-1 bg-gold/90 text-background py-4 text-sm font-bold tracking-widest hover:bg-foreground transition-colors uppercase">
+                <Link href="/collections" className="flex-1 bg-gold/90 text-background py-4 text-sm font-bold tracking-widest hover:bg-foreground transition-colors uppercase flex justify-center items-center">
                   Continue
                 </Link>
               </div>
@@ -114,11 +212,11 @@ export default function CheckoutPage() {
                         <div className="flex flex-col gap-6">
                           <div className="flex flex-col gap-2 group">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Email Address</label>
-                            <input type="email" required placeholder="you@example.com" className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
+                            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
                           </div>
                           <div className="flex flex-col gap-2 group">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Phone Number</label>
-                            <input type="tel" required placeholder="+1 (555) 000-0000" className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
+                            <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+92 (3XX) XXXXXXX" className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
                           </div>
                         </div>
                       </div>
@@ -134,31 +232,32 @@ export default function CheckoutPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="flex flex-col gap-2 group">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">First Name</label>
-                            <input type="text" required className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
+                            <input type="text" required value={firstName} onChange={(e) => setFirstName(e.target.value)} className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
                           </div>
                           <div className="flex flex-col gap-2 group">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Last Name</label>
-                            <input type="text" required className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
+                            <input type="text" required value={lastName} onChange={(e) => setLastName(e.target.value)} className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
                           </div>
                           <div className="flex flex-col gap-2 group md:col-span-2">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Address</label>
-                            <input type="text" required placeholder="Street address, P.O. box, etc." className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
+                            <input type="text" required value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Street address, P.O. box, etc." className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
                           </div>
                           <div className="flex flex-col gap-2 group">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">City</label>
-                            <input type="text" required className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
+                            <input type="text" required value={city} onChange={(e) => setCity(e.target.value)} className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
                           </div>
                           <div className="flex flex-col gap-2 group">
                             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Postal Code</label>
-                            <input type="text" required className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
+                            <input type="text" required value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
                           </div>
                           <div className="flex flex-col gap-2 group md:col-span-2">
-                            <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Country</label>
-                            <select className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide appearance-none">
-                              <option value="US" className="bg-background">United States</option>
-                              <option value="UK" className="bg-background">United Kingdom</option>
-                              <option value="PK" className="bg-background">Pakistan</option>
-                              <option value="AE" className="bg-background">United Arab Emirates</option>
+                            <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Province</label>
+                            <select value={province} onChange={(e) => setProvince(e.target.value)} className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide appearance-none">
+                              <option value="Sindh" className="bg-background">Sindh</option>
+                              <option value="Punjab" className="bg-background">Punjab</option>
+                              <option value="KPK" className="bg-background">KPK</option>
+                              <option value="Balochistan" className="bg-background">Balochistan</option>
+                              <option value="Islamabad" className="bg-background">Islamabad Capital Territory</option>
                             </select>
                           </div>
                         </div>
@@ -226,7 +325,7 @@ export default function CheckoutPage() {
                       <label className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${paymentMethod === 'card' ? 'bg-foreground/5' : 'hover:bg-foreground/5'}`}>
                         <input type="radio" name="payment" value="card" checked={paymentMethod === 'card'} onChange={() => setPaymentMethod('card')} className="accent-gold w-4 h-4" />
                         <CreditCard className="w-5 h-5 text-foreground/70" />
-                        <span className="text-sm font-semibold tracking-wide text-foreground">Credit Card</span>
+                        <span className="text-sm font-semibold tracking-wide text-foreground">Credit Card (Mocked)</span>
                       </label>
                       
                       {paymentMethod === 'card' && (
@@ -289,7 +388,7 @@ export default function CheckoutPage() {
                 </section>
 
                 <div className="hidden lg:block">
-                  <button type="submit" disabled={isProcessing} className="w-full bg-gold/90 text-background py-5 text-sm font-bold tracking-widest hover:bg-foreground hover:text-background transition-colors uppercase disabled:opacity-50 disabled:cursor-not-allowed flex justify-center">
+                  <button type="submit" disabled={isProcessing || cartItems.length === 0} className="w-full bg-gold/90 text-background py-5 text-sm font-bold tracking-widest hover:bg-foreground hover:text-background transition-colors uppercase disabled:opacity-50 disabled:cursor-not-allowed flex justify-center">
                     {isProcessing ? "Processing..." : "Complete Order"}
                   </button>
                 </div>
@@ -301,46 +400,92 @@ export default function CheckoutPage() {
               <div className="lux-glass-card p-6 md:p-8 sticky top-32">
                 <h3 className="text-lg font-serif text-foreground font-bold tracking-wide mb-6 pb-4 border-b border-foreground/10">Order Summary</h3>
                 
-                <div className="flex flex-col gap-6 mb-8">
-                  {/* Sample Cart Item */}
-                  <div className="flex items-center gap-4">
-                    <div className="relative w-20 h-24 bg-foreground/5 rounded overflow-hidden flex-shrink-0">
-                      <Image src="https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop" alt="Royal Oud" fill className="object-cover" />
-                    </div>
-                    <div className="flex flex-col flex-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-sm font-bold text-foreground tracking-wide">Royal Oud</span>
-                        <span className="text-sm font-semibold text-foreground tracking-wide">Rs. 15,000</span>
+                <div className="flex flex-col gap-6 mb-8 max-h-[300px] overflow-y-auto pr-2">
+                  {cartItems.map((item) => {
+                    const price = item.variant ? Number(item.variant.discount_price || item.variant.price) : Number(item.bundle.price);
+                    const name = item.variant ? item.variant.product.name : item.bundle.name;
+                    const image = item.variant ? item.variant.product.images[0]?.image_url : item.bundle.image_url;
+                    
+                    return (
+                    <div key={item.id} className="flex items-center gap-4">
+                      <div className="relative w-20 h-24 bg-foreground/5 rounded overflow-hidden flex-shrink-0">
+                        <Image src={image || "/placeholder.jpg"} alt={name} fill className="object-cover" />
                       </div>
-                      <span className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold mb-2">50ml</span>
-                      <span className="text-xs text-foreground/60 font-medium">Qty: 1</span>
+                      <div className="flex flex-col flex-1">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="text-sm font-bold text-foreground tracking-wide">{name}</span>
+                          <span className="text-sm font-semibold text-foreground tracking-wide">{formatPrice(price)}</span>
+                        </div>
+                        {item.variant && <span className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold mb-2">{item.variant.size_ml}ml</span>}
+                        <span className="text-xs text-foreground/60 font-medium">Qty: {item.quantity}</span>
+                      </div>
                     </div>
-                  </div>
+                  )})}
+                  
+                  {cartItems.length === 0 && (
+                    <p className="text-sm text-foreground/60 text-center py-4">Your cart is empty.</p>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-4 border-t border-foreground/10 pt-6 mb-6">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-foreground/60 font-medium tracking-wide">Subtotal</span>
-                    <span className="text-foreground font-semibold tracking-wide">Rs. 15,000</span>
+                    <span className="text-foreground font-semibold tracking-wide">{formatPrice(cartTotal)}</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-foreground/60 font-medium tracking-wide">Shipping</span>
-                    <span className="text-gold font-semibold tracking-wide">Free</span>
+                    <span className="text-gold font-semibold tracking-wide">{shippingFee === 0 ? 'Free' : formatPrice(shippingFee)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-foreground/60 font-medium tracking-wide">Tax</span>
-                    <span className="text-foreground font-semibold tracking-wide">Rs. 0</span>
+                  {appliedDiscount && (
+                    <div className="flex justify-between items-center text-sm text-green-500">
+                      <span className="font-medium tracking-wide">Discount ({appliedDiscount.code})</span>
+                      <span className="font-semibold tracking-wide">-{formatPrice(appliedDiscount.discountAmount)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Discount Code Section */}
+                <div className="mb-6 border-b border-foreground/10 pb-6">
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium mb-2 block">Discount Code</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter code"
+                      disabled={!!appliedDiscount || isValidatingDiscount}
+                      className="flex-1 bg-transparent border border-foreground/20 rounded p-3 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/30 text-foreground uppercase disabled:opacity-50"
+                      value={discountCodeInput}
+                      onChange={(e) => setDiscountCodeInput(e.target.value)}
+                    />
+                    {appliedDiscount ? (
+                      <button
+                        type="button"
+                        onClick={handleRemoveDiscount}
+                        className="bg-red-500/10 text-red-500 px-4 rounded text-sm font-bold tracking-widest hover:bg-red-500/20 transition-colors uppercase"
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleApplyDiscount}
+                        disabled={isValidatingDiscount || !discountCodeInput}
+                        className="bg-gold/90 text-background px-4 rounded text-sm font-bold tracking-widest hover:bg-foreground hover:text-background transition-colors uppercase disabled:opacity-50"
+                      >
+                        {isValidatingDiscount ? "..." : "Apply"}
+                      </button>
+                    )}
                   </div>
+                  {discountError && <p className="text-red-500 text-xs mt-2 font-medium tracking-wide">{discountError}</p>}
                 </div>
 
                 <div className="flex justify-between items-center border-t border-foreground/20 pt-6 mb-8">
                   <span className="text-lg font-serif text-foreground font-bold tracking-widest">Total</span>
-                  <span className="text-xl font-semibold text-foreground tracking-wide">Rs. 15,000</span>
+                  <span className="text-xl font-semibold text-foreground tracking-wide">{formatPrice(total)}</span>
                 </div>
 
                 {/* Mobile submit button */}
                 <div className="lg:hidden">
-                  <button onClick={handleCheckout} disabled={isProcessing} className="w-full bg-gold/90 text-background py-5 text-sm font-bold tracking-widest hover:bg-foreground hover:text-background transition-colors uppercase disabled:opacity-50 disabled:cursor-not-allowed flex justify-center">
+                  <button onClick={handleCheckout} disabled={isProcessing || cartItems.length === 0} className="w-full bg-gold/90 text-background py-5 text-sm font-bold tracking-widest hover:bg-foreground hover:text-background transition-colors uppercase disabled:opacity-50 disabled:cursor-not-allowed flex justify-center">
                     {isProcessing ? "Processing..." : "Complete Order"}
                   </button>
                 </div>

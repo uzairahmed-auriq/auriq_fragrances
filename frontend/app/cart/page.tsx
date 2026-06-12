@@ -7,49 +7,14 @@ import { Trash2, ArrowLeft, ShieldCheck, CreditCard } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 
-const mockCartItems = [
-  {
-    id: 1,
-    name: "Royal Oud",
-    brand: "Auriq",
-    price: 15000,
-    priceFormatted: "Rs. 15,000",
-    image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop",
-    quantity: 1,
-  },
-  {
-    id: 3,
-    name: "Baccarat Rouge",
-    brand: "Auriq",
-    price: 18200,
-    priceFormatted: "Rs. 18,200",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=2796&auto=format&fit=crop",
-    quantity: 2,
-  }
-];
+import { useCart } from "../context/CartContext";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(mockCartItems);
+  const { cartItems, cartTotal, updateQuantity, removeItem, isLoading } = useCart();
 
-  const updateQuantity = (id: number, delta: number) => {
-    setCartItems(items => 
-      items.map(item => {
-        if (item.id === id) {
-          const newQuantity = Math.max(1, item.quantity + delta);
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      })
-    );
-  };
+  const shipping = cartTotal > 20000 ? 0 : 500;
+  const total = cartTotal + shipping;
 
-  const removeItem = (id: number) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-  };
-
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const shipping = subtotal > 20000 ? 0 : 500;
-  const total = subtotal + shipping;
 
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(amount).replace('PKR', 'Rs.');
@@ -73,7 +38,11 @@ export default function CartPage() {
             </Link>
           </div>
 
-          {cartItems.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center py-24">
+              <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center lux-glass-card rounded-2xl">
               <h2 className="text-2xl font-serif text-foreground mb-4">Your cart is beautifully empty.</h2>
               <p className="text-foreground/60 mb-8 max-w-md">
@@ -104,32 +73,38 @@ export default function CartPage() {
 
                 {/* Items */}
                 <div className="flex flex-col gap-8 md:gap-0">
-                  {cartItems.map((item) => (
+                  {cartItems.map((item) => {
+                    const price = item.variant ? Number(item.variant.discount_price || item.variant.price) : Number(item.bundle.price);
+                    const name = item.variant ? item.variant.product.name : item.bundle.name;
+                    const brand = item.variant ? item.variant.product.brand : "Auriq";
+                    const image = item.variant ? item.variant.product.images[0]?.image_url : item.bundle.image_url;
+                    
+                    return (
                     <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-4 md:py-8 md:border-b border-foreground/5 items-center group">
                       
                       {/* Product Info */}
                       <div className="col-span-1 md:col-span-6 flex gap-6 items-center">
-                        <Link href={`/products/${item.id}`} className="relative w-24 h-32 md:w-28 md:h-36 shrink-0 bg-background rounded-lg overflow-hidden">
+                        <Link href={`/products/${item.variant?.product.id}`} className="relative w-24 h-32 md:w-28 md:h-36 shrink-0 bg-background rounded-lg overflow-hidden">
                           <Image
-                            src={item.image}
-                            alt={item.name}
+                            src={image || "/placeholder.jpg"}
+                            alt={name}
                             fill
                             className="object-cover opacity-90 transition-opacity group-hover:opacity-100"
                           />
                         </Link>
                         <div className="flex flex-col gap-2">
-                          <span className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold">{item.brand}</span>
-                          <Link href={`/products/${item.id}`}>
-                            <h3 className="font-serif text-lg md:text-xl text-foreground hover:text-gold transition-colors">{item.name}</h3>
+                          <span className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold">{brand}</span>
+                          <Link href={`/products/${item.variant?.product.id}`}>
+                            <h3 className="font-serif text-lg md:text-xl text-foreground hover:text-gold transition-colors">{name}</h3>
                           </Link>
-                          <span className="text-foreground/60 text-sm">{item.priceFormatted}</span>
+                          <span className="text-foreground/60 text-sm">{formatPrice(price)}</span>
                           
                           {/* Mobile Remove & Quantity */}
                           <div className="flex items-center justify-between mt-4 md:hidden">
                             <div className="flex items-center border border-foreground/20 rounded-full h-8 px-2">
-                              <button onClick={() => updateQuantity(item.id, -1)} className="px-2 text-foreground/70 hover:text-foreground">-</button>
+                              <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-2 text-foreground/70 hover:text-foreground">-</button>
                               <span className="w-6 text-center text-xs text-foreground">{item.quantity}</span>
-                              <button onClick={() => updateQuantity(item.id, 1)} className="px-2 text-foreground/70 hover:text-foreground">+</button>
+                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 text-foreground/70 hover:text-foreground">+</button>
                             </div>
                             <button onClick={() => removeItem(item.id)} className="text-foreground/40 hover:text-red-400 transition-colors p-2">
                               <Trash2 className="w-4 h-4" />
@@ -141,16 +116,16 @@ export default function CartPage() {
                       {/* Desktop Quantity */}
                       <div className="hidden md:flex col-span-3 justify-center">
                         <div className="flex items-center border border-foreground/20 rounded-full h-10 px-2 lux-glass-card">
-                          <button onClick={() => updateQuantity(item.id, -1)} className="px-3 text-foreground/70 hover:text-foreground">-</button>
+                          <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-3 text-foreground/70 hover:text-foreground">-</button>
                           <span className="w-8 text-center text-sm font-bold text-foreground">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, 1)} className="px-3 text-foreground/70 hover:text-foreground">+</button>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-3 text-foreground/70 hover:text-foreground">+</button>
                         </div>
                       </div>
 
                       {/* Desktop Total & Remove */}
                       <div className="hidden md:flex col-span-3 justify-end items-center gap-6">
                         <span className="text-foreground font-medium tracking-wide">
-                          {formatPrice(item.price * item.quantity)}
+                          {formatPrice(price * item.quantity)}
                         </span>
                         <button 
                           onClick={() => removeItem(item.id)}
@@ -161,7 +136,7 @@ export default function CartPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
 
@@ -173,7 +148,7 @@ export default function CartPage() {
                   <div className="flex flex-col gap-4 text-sm font-medium tracking-wide">
                     <div className="flex justify-between items-center text-foreground/70">
                       <span>Subtotal</span>
-                      <span className="text-foreground">{formatPrice(subtotal)}</span>
+                      <span className="text-foreground">{formatPrice(cartTotal)}</span>
                     </div>
                     <div className="flex justify-between items-center text-foreground/70">
                       <span>Shipping</span>

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Search, Heart, ShoppingCart, User } from "lucide-react";
 import AnnouncementBar from "./AnnouncementBar";
+import { useCart } from "../../context/CartContext";
 
 export default function Header() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function Header() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { cartCount } = useCart();
 
   useEffect(() => {
     const checkLogin = () => {
@@ -120,7 +122,11 @@ export default function Header() {
             </Link>
             <Link href="/cart" aria-label="Cart" className="hover:text-gold transition-colors relative">
               <ShoppingCart className="w-5 h-5" />
-              <span className="absolute -top-1.5 -right-1.5 bg-gold text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">2</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-gold text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
             </Link>
             <div className="relative" ref={dropdownRef}>
               {isLoggedIn ? (

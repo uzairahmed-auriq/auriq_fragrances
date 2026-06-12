@@ -5,6 +5,7 @@ import { createProduct, getAllProducts } from '../controllers/adminProductContro
 import { createCategory, updateCategory } from '../controllers/adminCategoryController';
 import { createAd, getAllAds } from '../controllers/adminAdController';
 import { getAllOrders, updateOrderStatus } from '../controllers/adminOrderController';
+import { getAllDiscounts, createDiscount, updateDiscount, deleteDiscount } from '../controllers/adminDiscountController';
 import { verifyAdmin } from '../middleware/authMiddleware';
 
 const router = Router();
@@ -30,5 +31,11 @@ router.post('/ads', upload.single('image'), createAd);
 // Orders
 router.get('/orders', getAllOrders);
 router.put('/orders/:id/status', updateOrderStatus);
+
+// Discounts
+router.get('/discounts', getAllDiscounts);
+router.post('/discounts', createDiscount);
+router.put('/discounts/:id', updateDiscount);
+router.delete('/discounts/:id', deleteDiscount);
 
 export default router;

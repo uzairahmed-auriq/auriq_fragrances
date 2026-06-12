@@ -1,0 +1,104 @@
+"use client";
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import * as cartService from '../services/cartService';
+
+interface CartItem {
+  id: number;
+  quantity: number;
+  variant: any;
+  bundle: any;
+}
+
+interface CartContextType {
+  cartItems: CartItem[];
+  cartTotal: number;
+  cartCount: number;
+  isLoading: boolean;
+  refreshCart: () => Promise<void>;
+  addToCart: (variantId?: number, bundleId?: number, quantity?: number) => Promise<void>;
+  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+  removeItem: (itemId: number) => Promise<void>;
+}
+
+const CartContext = createContext<CartContextType | undefined>(undefined);
+
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshCart = async () => {
+    try {
+      setIsLoading(true);
+      const res = await cartService.getCart();
+      if (res.success && res.data && res.data.items) {
+        setCartItems(res.data.items);
+      } else {
+        setCartItems([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch cart', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshCart();
+    window.addEventListener('loginStateChange', refreshCart);
+    return () => {
+      window.removeEventListener('loginStateChange', refreshCart);
+    };
+  }, []);
+
+  const addToCart = async (variantId?: number, bundleId?: number, quantity: number = 1) => {
+    try {
+      await cartService.addToCart(variantId, bundleId, quantity);
+      await refreshCart();
+    } catch (error) {
+      console.error('Failed to add to cart', error);
+      throw error;
+    }
+  };
+
+  const updateQuantity = async (itemId: number, quantity: number) => {
+    try {
+      await cartService.updateCartItem(itemId, quantity);
+      await refreshCart();
+    } catch (error) {
+      console.error('Failed to update quantity', error);
+      throw error;
+    }
+  };
+
+  const removeItem = async (itemId: number) => {
+    try {
+      await cartService.removeFromCart(itemId);
+      await refreshCart();
+    } catch (error) {
+      console.error('Failed to remove item', error);
+      throw error;
+    }
+  };
+
+  const cartTotal = cartItems.reduce((total, item) => {
+    const price = item.variant ? Number(item.variant.discount_price || item.variant.price) : Number(item.bundle.price);
+    return total + price * item.quantity;
+  }, 0);
+
+  const cartCount = cartItems.reduce((count, item) => count + item.quantity, 0);
+
+  return (
+    <CartContext.Provider value={{ cartItems, cartTotal, cartCount, isLoading, refreshCart, addToCart, updateQuantity, removeItem }}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+};

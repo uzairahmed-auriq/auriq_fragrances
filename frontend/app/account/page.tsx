@@ -7,6 +7,7 @@ import { User, Mail, Lock, LogOut, Package, MapPin, CreditCard, Clock, ChevronRi
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { apiFetch } from "../utils/api";
+import { getMyOrders } from "../services/orderService";
 import { useGoogleLogin } from '@react-oauth/google';
 import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
 
@@ -35,6 +36,7 @@ function AccountContent() {
   // User State
   const [user, setUser] = useState<any>(null);
   const [addresses, setAddresses] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [profileName, setProfileName] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
   
@@ -70,6 +72,11 @@ function AccountContent() {
       });
       if (addressRes.success) {
         setAddresses(addressRes.data);
+      }
+
+      const ordersRes = await getMyOrders();
+      if (ordersRes.success) {
+        setOrders(ordersRes.data);
       }
     } catch (e) {
       console.error("Failed to fetch user data");
@@ -290,7 +297,7 @@ function AccountContent() {
     <div className="container-lux pt-16 pb-24">
       <div className="text-center mb-16">
         <span className="text-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 block">Membership</span>
-        <h1 className="text-4xl md:text-5xl font-serif text-foreground font-bold tracking-widest mb-6">Auriq Exclusives</h1>
+        <h1 className="text-4xl md:text-5xl font-serif text-gradient-gold font-bold tracking-widest mb-6 pb-2">Auriq Exclusives</h1>
         <p className="text-foreground/60 max-w-xl mx-auto">
           Sign in or create an account to manage your orders, save your favorite fragrances, and receive exclusive access to new launches.
         </p>
@@ -523,16 +530,24 @@ function AccountContent() {
               <div className="border-t border-foreground/10 pt-8">
                 <h3 className="text-[10px] font-bold tracking-[0.2em] uppercase text-foreground/50 mb-6">Recent Orders</h3>
                 <div className="flex flex-col gap-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between p-6 border border-foreground/10 hover:border-gold/30 transition-colors gap-4 bg-foreground/[0.02]">
-                    <div>
-                      <p className="text-sm font-bold tracking-wide text-foreground mb-1">#AQ-8932</p>
-                      <p className="text-xs text-foreground/60 font-medium">Placed on Oct 12, 2025</p>
-                    </div>
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
-                      <span className="px-3 py-1 bg-green-500/10 text-green-500 rounded text-[10px] font-bold uppercase tracking-widest border border-green-500/20">Delivered</span>
-                      <Link href="/orders" className="text-gold hover:underline text-xs tracking-widest uppercase font-bold">View Details</Link>
-                    </div>
-                  </div>
+                  {orders.length === 0 ? (
+                    <p className="text-sm text-foreground/60">No orders found.</p>
+                  ) : (
+                    orders.map((order) => (
+                      <div key={order.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 border border-foreground/10 hover:border-gold/30 transition-colors gap-4 bg-foreground/[0.02]">
+                        <div>
+                          <p className="text-sm font-bold tracking-wide text-foreground mb-1">#AUR-{order.id}</p>
+                          <p className="text-xs text-foreground/60 font-medium">Placed on {new Date(order.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
+                          <span className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-widest border ${order.status === 'DELIVERED' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-gold/10 text-gold border-gold/20'}`}>
+                            {order.status}
+                          </span>
+                          <Link href={`/orders/${order.id}`} className="text-gold hover:underline text-xs tracking-widest uppercase font-bold">View Details</Link>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

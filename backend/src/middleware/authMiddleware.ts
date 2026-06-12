@@ -64,3 +64,20 @@ export const verifyUser = (req: UserAuthRequest, res: Response, next: NextFuncti
     res.status(401).json({ success: false, message: 'Unauthorized: Invalid token' });
   }
 };
+
+export const optionalUser = (req: UserAuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, ENV.JWT_ACCESS_SECRET) as any;
+      req.user = {
+        id: decoded.id,
+        email: decoded.email
+      };
+    }
+  } catch (error) {
+    // Ignore error, treat as guest
+  }
+  next();
+};

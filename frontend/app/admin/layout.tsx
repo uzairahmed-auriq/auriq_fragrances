@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Search, Bell, Store } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Search, Bell, Store, Ticket } from "lucide-react";
 import { useEffect, useState } from "react";
 import { adminAuthService } from "./services/adminAuthService";
 
@@ -18,6 +18,7 @@ export default function AdminLayout({
     { name: "Products", href: "/admin/products", icon: Package },
     { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
     { name: "Customers", href: "/admin/customers", icon: Users },
+    { name: "Coupons", href: "/admin/discounts", icon: Ticket },
     { name: "Storefront Editor", href: "/admin/storefront", icon: Store },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
