@@ -7,6 +7,7 @@ import { createAd, getAllAds, deleteAd, toggleAdStatus } from '../controllers/ad
 import { getAllOrders, updateOrderStatus, getDashboardStats } from '../controllers/adminOrderController';
 import { getAllDiscounts, createDiscount, updateDiscount, deleteDiscount } from '../controllers/adminDiscountController';
 import { verifyAdmin } from '../middleware/authMiddleware';
+import { updateStory } from '../controllers/storyController';
 
 const router = Router();
 
@@ -80,7 +81,7 @@ router.put('/discounts/:id', updateDiscount);
 router.delete('/discounts/:id', deleteDiscount);
 
 // Story (CMS)
-import { updateStory } from '../controllers/storyController';
+
 router.put('/story', upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }]), updateStory);
 
 export default router;

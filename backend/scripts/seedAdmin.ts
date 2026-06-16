@@ -21,7 +21,8 @@ async function main() {
   
   await prisma.admin.create({
     data: {
-      name: 'Auriq Admin',
+      first_name: 'Auriq',
+      last_name: 'Admin',
       email,
       password: hashedPassword,
     }
