@@ -1,29 +1,41 @@
-import { Award, ShieldCheck, Truck, Smile } from "lucide-react";
+"use client";
 
-const features = [
-  {
-    icon: <Award className="w-8 h-8" />,
-    title: "Premium Quality",
-    description: "Sourced from the finest ingredients worldwide, ensuring an unparalleled olfactory experience.",
-  },
-  {
-    icon: <ShieldCheck className="w-8 h-8" />,
-    title: "Authentic Fragrances",
-    description: "100% genuine products crafted by master perfumers with a rich heritage in scent making.",
-  },
-  {
-    icon: <Truck className="w-8 h-8" />,
-    title: "Fast Delivery",
-    description: "Complimentary express shipping on all orders, delivered in pristine condition to your doorstep.",
-  },
-  {
-    icon: <Smile className="w-8 h-8" />,
-    title: "Customer Satisfaction",
-    description: "Dedicated concierge service ready to assist you in finding your perfect signature scent.",
-  },
-];
+import { useState, useEffect } from "react";
+import { Award, ShieldCheck, Truck, Smile } from "lucide-react";
+import { publicSettingsService } from "../../services/publicSettingsService";
 
 export default function WhyChooseAuriq() {
+  const [settings, setSettings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    publicSettingsService.getSettingsByGroup("HOMEPAGE").then(setSettings);
+  }, []);
+
+  const title = settings.WHY_CHOOSE_TITLE || "The Auriq Standard";
+
+  const features = [
+    {
+      icon: <Award className="w-8 h-8" />,
+      title: settings.WHY_CHOOSE_F1_TITLE || "Premium Quality",
+      description: settings.WHY_CHOOSE_F1_DESC || "Sourced from the finest ingredients worldwide, ensuring an unparalleled olfactory experience.",
+    },
+    {
+      icon: <ShieldCheck className="w-8 h-8" />,
+      title: settings.WHY_CHOOSE_F2_TITLE || "Authentic Fragrances",
+      description: settings.WHY_CHOOSE_F2_DESC || "100% genuine products crafted by master perfumers with a rich heritage in scent making.",
+    },
+    {
+      icon: <Truck className="w-8 h-8" />,
+      title: settings.WHY_CHOOSE_F3_TITLE || "Fast Delivery",
+      description: settings.WHY_CHOOSE_F3_DESC || "Complimentary express shipping on all orders, delivered in pristine condition to your doorstep.",
+    },
+    {
+      icon: <Smile className="w-8 h-8" />,
+      title: "Customer Satisfaction",
+      description: "Dedicated concierge service ready to assist you in finding your perfect signature scent.",
+    },
+  ];
+
   return (
     <section className="py-32 bg-perfume-main relative overflow-hidden">
       {/* Noise texture */}
@@ -32,7 +44,7 @@ export default function WhyChooseAuriq() {
       <div className="container-lux relative z-10">
         <div className="text-center mb-24">
           <span className="text-gold text-xs tracking-[0.3em] uppercase mb-4 block font-bold">Our Philosophy</span>
-          <h2 className="text-3xl md:text-5xl font-serif text-gradient-gold mb-8 font-bold tracking-wide drop-shadow-md">The Auriq Standard</h2>
+          <h2 className="text-3xl md:text-5xl font-serif text-gradient-gold mb-8 font-bold tracking-wide drop-shadow-md">{title}</h2>
           <div className="w-24 h-[2px] bg-gold mx-auto shadow-[0_0_10px_rgba(212,175,55,0.8)]"></div>
         </div>
 

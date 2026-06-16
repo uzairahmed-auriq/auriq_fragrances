@@ -123,6 +123,7 @@ export const createOrder = async (req: UserAuthRequest, res: Response): Promise<
           guest_email: userId ? null : guestInfo?.email,
           guest_name: userId ? null : guestInfo?.name,
           guest_phone: userId ? null : guestInfo?.phone,
+          session_id: userId ? null : sessionId,
           shipping_name: shippingAddress.name,
           shipping_phone: shippingAddress.phone,
           shipping_street: shippingAddress.street,
@@ -213,16 +214,18 @@ export const getOrderById = async (req: UserAuthRequest, res: Response): Promise
       return;
     }
 
-    // STRICT SECURITY RULE: Must be owner or guest accessing their own order (can use email/token)
+    // STRICT SECURITY RULE: Must be owner or guest accessing their own order
     if (order.user_id && order.user_id !== userId) {
       res.status(403).json({ success: false, message: 'Forbidden: You do not have permission to view this order.' });
       return;
     }
 
-    // Note: If it's a guest order, we might need a separate mechanism like order token to view it
-    // For now, if it's a guest order, we'll return it, but a robust app would require an order_token
-    if (!order.user_id && !req.headers['x-guest-session-id']) {
-      // In a real scenario, protect guest orders too.
+    if (!order.user_id) {
+      const guestSessionId = req.headers['x-guest-session-id'];
+      if (!guestSessionId || guestSessionId !== order.session_id) {
+        res.status(403).json({ success: false, message: 'Forbidden: Unauthorized access to guest order.' });
+        return;
+      }
     }
 
     res.json({ success: true, data: order });

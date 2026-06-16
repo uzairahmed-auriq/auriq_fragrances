@@ -13,6 +13,13 @@ export const getAnalytics = async (req: Request, res: Response) => {
     
     const startOfYear = new Date(today.getFullYear(), 0, 1);
 
+    // Sales Trends: Last 7 days
+    const last7Days = Array.from({ length: 7 }).map((_, i) => {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      return d;
+    }).reverse();
+
     const [
       revenueTodayData,
       revenueWeekData,
@@ -20,7 +27,9 @@ export const getAnalytics = async (req: Request, res: Response) => {
       revenueYearData,
       totalOrdersData,
       totalRevenueData,
+      totalCustomersData,
       returningCustomersData,
+      recentOrdersData
     ] = await Promise.all([
       prisma.order.aggregate({ _sum: { total: true }, where: { created_at: { gte: today }, payment_status: 'PAID' } }),
       prisma.order.aggregate({ _sum: { total: true }, where: { created_at: { gte: startOfWeek }, payment_status: 'PAID' } }),
@@ -28,8 +37,31 @@ export const getAnalytics = async (req: Request, res: Response) => {
       prisma.order.aggregate({ _sum: { total: true }, where: { created_at: { gte: startOfYear }, payment_status: 'PAID' } }),
       prisma.order.count({ where: { payment_status: 'PAID' } }),
       prisma.order.aggregate({ _sum: { total: true }, where: { payment_status: 'PAID' } }),
-      prisma.order.groupBy({ by: ['user_id'], _count: { id: true }, having: { id: { _count: { gt: 1 } } } })
+      prisma.user.count(),
+      prisma.order.groupBy({ by: ['user_id'], _count: { id: true }, having: { id: { _count: { gt: 1 } } } }),
+      prisma.order.findMany({
+        take: 10,
+        orderBy: { created_at: 'desc' },
+        include: { user: { select: { name: true, email: true } }, items: true }
+      })
     ]);
+
+    // Compute sales trends manually since prisma doesn't have native day-by-day grouping easily without raw query
+    const trendDataPromises = last7Days.map(async (date) => {
+      const nextDate = new Date(date);
+      nextDate.setDate(date.getDate() + 1);
+      
+      const res = await prisma.order.aggregate({
+        _sum: { total: true },
+        where: { created_at: { gte: date, lt: nextDate }, payment_status: 'PAID' }
+      });
+      return {
+        date: date.toISOString().split('T')[0],
+        revenue: res._sum.total || 0
+      };
+    });
+    
+    const salesTrends = await Promise.all(trendDataPromises);
 
     const revenueToday = revenueTodayData._sum.total || 0;
     const revenueWeek = revenueWeekData._sum.total || 0;
@@ -38,6 +70,7 @@ export const getAnalytics = async (req: Request, res: Response) => {
     const totalRevenue = totalRevenueData._sum.total || 0;
     const aov = totalOrdersData > 0 ? (Number(totalRevenue) / totalOrdersData).toFixed(2) : 0;
     const returningCustomers = returningCustomersData.length;
+    const totalCustomers = totalCustomersData;
 
     // Top Selling Products
     const orderItems = await prisma.orderItem.groupBy({
@@ -70,9 +103,13 @@ export const getAnalytics = async (req: Request, res: Response) => {
         revenueWeek,
         revenueMonth,
         revenueYear,
-        averageOrderValue: aov,
+        totalOrders: totalOrdersData,
+        totalCustomers,
+        averageOrderValue: Number(aov),
         returningCustomers,
-        topProducts: topProducts.filter(Boolean)
+        topProducts: topProducts.filter(Boolean),
+        recentOrders: recentOrdersData,
+        salesTrends
       }
     });
   } catch (error) {

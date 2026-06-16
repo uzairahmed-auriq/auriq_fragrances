@@ -112,7 +112,7 @@ export default function HomepageCMS() {
             </div>
             
             {/* Global Save for Settings-based tabs */}
-            {['hero', 'featured', 'bestsellers', 'why_choose'].includes(activeTab) && (
+            {['hero', 'announcements', 'featured', 'bestsellers', 'why_choose'].includes(activeTab) && (
               <button 
                 onClick={saveSettings}
                 disabled={isSaving}
@@ -209,14 +209,264 @@ export default function HomepageCMS() {
             </div>
           )}
 
-          {/* Placeholder for other tabs (Announcements, Banners, Testimonials) */}
-          {['announcements', 'banners', 'featured', 'bestsellers', 'why_choose', 'testimonials'].includes(activeTab) && (
-            <div className="flex flex-col items-center justify-center p-20 border border-dashed border-foreground/20 rounded-xl">
-              <AlertCircle className="w-12 h-12 text-foreground/20 mb-4" />
-              <h3 className="text-xl font-bold text-foreground/50">Coming Soon</h3>
-              <p className="text-sm text-foreground/40 mt-2 text-center max-w-sm">
-                The {activeTab} management interface is currently under construction.
-              </p>
+          {/* Tab Content: ANNOUNCEMENTS */}
+          {activeTab === 'announcements' && (
+            <div className="space-y-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
+                <h3 className="text-lg font-bold">Announcement Bar</h3>
+                
+                <div className="flex items-center gap-3 border-b border-foreground/10 pb-4">
+                  <input 
+                    type="checkbox" 
+                    id="announcement_enabled" 
+                    checked={settings.ANNOUNCEMENT_ENABLED !== 'false'}
+                    onChange={(e) => handleSettingChange('ANNOUNCEMENT_ENABLED', e.target.checked.toString())}
+                    className="w-4 h-4 accent-gold"
+                  />
+                  <label htmlFor="announcement_enabled" className="text-sm font-bold text-foreground cursor-pointer">Enable Announcement Bar</label>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Announcement Text</label>
+                    <input 
+                      type="text" 
+                      value={settings.ANNOUNCEMENT_TEXT || ''}
+                      onChange={(e) => handleSettingChange('ANNOUNCEMENT_TEXT', e.target.value)}
+                      placeholder="e.g. Free shipping on all orders over Rs. 5000"
+                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Announcement Link (Optional)</label>
+                    <input 
+                      type="text" 
+                      value={settings.ANNOUNCEMENT_LINK || ''}
+                      onChange={(e) => handleSettingChange('ANNOUNCEMENT_LINK', e.target.value)}
+                      placeholder="e.g. /collections/sale"
+                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Content: FEATURED COLLECTION */}
+          {activeTab === 'featured' && (
+            <div className="space-y-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
+                <h3 className="text-lg font-bold">Featured Collection</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Section Title</label>
+                    <input 
+                      type="text" 
+                      value={settings.FEATURED_TITLE || ''}
+                      onChange={(e) => handleSettingChange('FEATURED_TITLE', e.target.value)}
+                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Section Subtitle</label>
+                    <textarea 
+                      value={settings.FEATURED_SUBTITLE || ''}
+                      onChange={(e) => handleSettingChange('FEATURED_SUBTITLE', e.target.value)}
+                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Target Category ID</label>
+                    <input 
+                      type="number" 
+                      value={settings.FEATURED_CATEGORY_ID || ''}
+                      onChange={(e) => handleSettingChange('FEATURED_CATEGORY_ID', e.target.value)}
+                      placeholder="e.g. 1"
+                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Content: BEST SELLERS */}
+          {activeTab === 'bestsellers' && (
+            <div className="space-y-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
+                <h3 className="text-lg font-bold">Best Sellers</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Section Title</label>
+                    <input 
+                      type="text" 
+                      value={settings.BESTSELLERS_TITLE || ''}
+                      onChange={(e) => handleSettingChange('BESTSELLERS_TITLE', e.target.value)}
+                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Product Limit</label>
+                    <input 
+                      type="number" 
+                      value={settings.BESTSELLERS_LIMIT || '4'}
+                      onChange={(e) => handleSettingChange('BESTSELLERS_LIMIT', e.target.value)}
+                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Content: WHY CHOOSE AURIQ */}
+          {activeTab === 'why_choose' && (
+            <div className="space-y-6">
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
+                <h3 className="text-lg font-bold">Why Choose Auriq</h3>
+                <div className="space-y-2 mb-6 border-b border-foreground/10 pb-6">
+                  <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Main Title</label>
+                  <input 
+                    type="text" 
+                    value={settings.WHY_CHOOSE_TITLE || ''}
+                    onChange={(e) => handleSettingChange('WHY_CHOOSE_TITLE', e.target.value)}
+                    className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Feature 1 */}
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-sm text-gold">Feature 1</h4>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Title</label>
+                      <input 
+                        type="text" 
+                        value={settings.WHY_CHOOSE_F1_TITLE || ''}
+                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F1_TITLE', e.target.value)}
+                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
+                      <textarea 
+                        value={settings.WHY_CHOOSE_F1_DESC || ''}
+                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F1_DESC', e.target.value)}
+                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Feature 2 */}
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-sm text-gold">Feature 2</h4>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Title</label>
+                      <input 
+                        type="text" 
+                        value={settings.WHY_CHOOSE_F2_TITLE || ''}
+                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F2_TITLE', e.target.value)}
+                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
+                      <textarea 
+                        value={settings.WHY_CHOOSE_F2_DESC || ''}
+                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F2_DESC', e.target.value)}
+                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
+                      />
+                    </div>
+                  </div>
+
+                  {/* Feature 3 */}
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-sm text-gold">Feature 3</h4>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Title</label>
+                      <input 
+                        type="text" 
+                        value={settings.WHY_CHOOSE_F3_TITLE || ''}
+                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F3_TITLE', e.target.value)}
+                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
+                      <textarea 
+                        value={settings.WHY_CHOOSE_F3_DESC || ''}
+                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F3_DESC', e.target.value)}
+                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tab Content: BANNERS (READ-ONLY DISPLAY) */}
+          {activeTab === 'banners' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
+                <div>
+                  <h3 className="text-lg font-bold">Current Banners</h3>
+                  <p className="text-sm text-foreground/60">Banners managed globally via the Ads menu.</p>
+                </div>
+                <a href="/admin/ads" className="bg-foreground/5 hover:bg-foreground/10 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
+                  Manage Ads
+                </a>
+              </div>
+
+              {ads.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {ads.map(ad => (
+                    <div key={ad.id} className="relative rounded-lg overflow-hidden border border-foreground/10 h-32 flex items-center justify-center bg-foreground/5">
+                      {ad.image_url ? (
+                        <img src={ad.image_url} alt={ad.title} className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                      ) : null}
+                      <div className="relative z-10 text-center">
+                        <span className="font-bold block">{ad.title}</span>
+                        <span className="text-xs uppercase tracking-widest">{ad.position}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-12 border border-dashed border-foreground/20 rounded-xl text-foreground/50 font-medium">
+                  No active banners found.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab Content: TESTIMONIALS (READ-ONLY DISPLAY) */}
+          {activeTab === 'testimonials' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
+                <div>
+                  <h3 className="text-lg font-bold">Customer Testimonials</h3>
+                  <p className="text-sm text-foreground/60">Testimonials managed globally.</p>
+                </div>
+              </div>
+
+              {testimonials.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {testimonials.map(t => (
+                    <div key={t.id} className="p-4 border border-foreground/10 rounded-lg bg-foreground/[0.02]">
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-bold">{t.customer_name}</span>
+                        <span className="text-gold font-bold">★ {t.rating}/5</span>
+                      </div>
+                      <p className="text-sm text-foreground/70 italic">"{t.content}"</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center p-12 border border-dashed border-foreground/20 rounded-xl text-foreground/50 font-medium">
+                  No testimonials found.
+                </div>
+              )}
             </div>
           )}
 

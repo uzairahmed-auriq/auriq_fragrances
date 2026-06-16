@@ -3,16 +3,34 @@ import prisma from '../config/database'
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await prisma.product.findMany({
-      where: { is_active: true },
-      include: {
-        category: true,
-        variants: true,
-        images: { orderBy: { sort_order: 'asc' } },
-        fragrance_notes: true,
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+
+    const [total, products] = await Promise.all([
+      prisma.product.count({ where: { is_active: true } }),
+      prisma.product.findMany({
+        where: { is_active: true },
+        include: {
+          category: true,
+          variants: true,
+          images: { orderBy: { sort_order: 'asc' } },
+          fragrance_notes: true,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ]);
+
+    res.json({ 
+      success: true, 
+      data: products,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
       }
     })
-    res.json({ success: true, data: products })
   } catch (error) {
     console.error('GET ALL PRODUCTS ERROR:', error)
     res.status(500).json({ success: false, message: 'Server error' })

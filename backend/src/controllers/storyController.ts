@@ -3,12 +3,13 @@ import { PrismaClient } from '@prisma/client';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import axios from 'axios';
 import { ENV } from '../config/env';
+import { logAdminAction } from '../utils/auditLog';
 
 const prisma = new PrismaClient();
 
 const revalidateFrontend = async (tag: string) => {
   try {
-    await axios.post('http://localhost:3000/api/revalidate', {
+    await axios.post(`${ENV.FRONTEND_URL}/api/revalidate`, {
       tag,
       secret: ENV.REVALIDATION_SECRET
     });
@@ -94,6 +95,8 @@ export const updateStory = async (req: Request, res: Response) => {
     });
 
     await revalidateFrontend('story');
+
+    await logAdminAction((req as any).admin.id, 'UPDATE_STORY', 'Story', 1, existingStory, story);
 
     res.json({ success: true, data: story, message: 'Story updated successfully' });
   } catch (error) {

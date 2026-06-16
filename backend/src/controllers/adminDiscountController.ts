@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import prisma from '../config/database';
 import { AdminAuthRequest } from '../middleware/authMiddleware';
+import { logAdminAction } from '../utils/auditLog';
 
 export const getAllDiscounts = async (req: AdminAuthRequest, res: Response): Promise<void> => {
   try {
@@ -35,6 +36,7 @@ export const createDiscount = async (req: AdminAuthRequest, res: Response): Prom
         expires_at: expires_at ? new Date(expires_at) : null
       }
     });
+    await logAdminAction(req.admin!.id, 'CREATE_DISCOUNT', 'DiscountCode', discount.id, null, { code: discount.code });
 
     res.json({ success: true, data: discount });
   } catch (error) {
@@ -56,6 +58,7 @@ export const updateDiscount = async (req: AdminAuthRequest, res: Response): Prom
         expires_at: expires_at ? new Date(expires_at) : null
       }
     });
+    await logAdminAction(req.admin!.id, 'UPDATE_DISCOUNT', 'DiscountCode', discount.id, null, discount);
 
     res.json({ success: true, data: discount });
   } catch (error) {
@@ -70,6 +73,9 @@ export const deleteDiscount = async (req: AdminAuthRequest, res: Response): Prom
     await prisma.discountCode.delete({
       where: { id: parseInt(id as string) }
     });
+    
+    await logAdminAction(req.admin!.id, 'DELETE_DISCOUNT', 'DiscountCode', parseInt(id as string), null, null);
+    
     res.json({ success: true, message: 'Discount deleted' });
   } catch (error) {
     console.error('Error deleting discount:', error);

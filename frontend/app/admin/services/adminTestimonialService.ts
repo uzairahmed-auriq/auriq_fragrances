@@ -1,63 +1,31 @@
-import { API_URL } from "../../utils/api";
-import { adminAuthService } from "./adminAuthService";
+import { adminFetch } from "../lib/adminFetch";
 
 export const adminTestimonialService = {
   getAll: async () => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/testimonials`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data.data;
+    const res = await adminFetch(`/testimonials`);
+    return res.data;
   },
 
   create: async (payload: any) => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/testimonials`, {
+    const res = await adminFetch(`/testimonials`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data;
+    return res;
   },
 
   update: async (id: number, payload: any) => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/testimonials/${id}`, {
+    const res = await adminFetch(`/testimonials/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data;
+    return res;
   },
 
   delete: async (id: number) => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/testimonials/${id}`, {
+    const res = await adminFetch(`/testimonials/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data;
+    return res;
   }
 };

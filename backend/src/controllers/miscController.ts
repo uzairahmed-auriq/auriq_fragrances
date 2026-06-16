@@ -71,3 +71,28 @@ export const cancelOrder = async (req: UserAuthRequest, res: Response) => {
     res.status(500).json({ success: false, message: 'Server error' })
   }
 }
+
+export const getPublicSettings = async (req: Request, res: Response) => {
+  try {
+    const { group } = req.query;
+    
+    let whereClause = {};
+    if (group && typeof group === 'string') {
+      whereClause = { group };
+    }
+
+    const settings = await prisma.systemSetting.findMany({
+      where: whereClause
+    });
+
+    const settingsMap: Record<string, string> = {};
+    settings.forEach(s => {
+      settingsMap[s.key] = s.value;
+    });
+
+    res.json({ success: true, data: settingsMap });
+  } catch (error) {
+    console.error('PUBLIC SETTINGS ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+}

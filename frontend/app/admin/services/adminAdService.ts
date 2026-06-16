@@ -1,60 +1,31 @@
-import { API_URL } from "../../utils/api";
-import { adminAuthService } from "./adminAuthService";
+import { adminFetch } from "../lib/adminFetch";
 
 export const adminAdService = {
   getAds: async () => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/ads`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data.data;
+    const res = await adminFetch(`/ads`);
+    return res.data;
   },
 
   createAd: async (formData: FormData) => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/ads`, {
+    const res = await adminFetch(`/ads`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data;
+    return res;
   },
 
   updateAdStatus: async (id: number, isActive: boolean) => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/ads/${id}/status`, {
+    const res = await adminFetch(`/ads/${id}/status`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
       body: JSON.stringify({ is_active: isActive }),
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data.data;
+    return res.data;
   },
 
   deleteAd: async (id: number) => {
-    const token = adminAuthService.getToken();
-    if (!token) throw new Error("No token found");
-
-    const res = await fetch(`${API_URL}/admin/ads/${id}`, {
+    const res = await adminFetch(`/ads/${id}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-    return data;
+    return res;
   }
 };

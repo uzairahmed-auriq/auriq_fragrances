@@ -11,4 +11,5 @@ export const ENV = {
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET!,
   REVALIDATION_SECRET: process.env.REVALIDATION_SECRET!,
   RESEND_API_KEY: process.env.RESEND_API_KEY!,
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
 }

@@ -1,9 +1,23 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCardActions from "./ProductCardActions";
+import { publicSettingsService } from "../../services/publicSettingsService";
 
 export default function FeaturedCollection({ products = [] }: { products?: any[] }) {
+  const [settings, setSettings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    publicSettingsService.getSettingsByGroup("HOMEPAGE").then(setSettings);
+  }, []);
+
   if (!products || products.length === 0) return null;
+
+  const title = settings.FEATURED_TITLE || "Featured Collection";
+  const subtitle = settings.FEATURED_SUBTITLE || "";
+
   return (
     <section className="py-24 bg-perfume-main relative overflow-hidden" id="collection">
       {/* Noise texture for matte finish */}
@@ -11,7 +25,12 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
       
       <div className="container-lux relative z-10">
         <div className="flex justify-between items-end mb-16 border-b border-foreground/5 pb-6">
-          <h2 className="text-3xl md:text-5xl font-serif text-gradient-gold font-bold tracking-wide">Featured Collection</h2>
+          <div>
+            <h2 className="text-3xl md:text-5xl font-serif text-gradient-gold font-bold tracking-wide">{title}</h2>
+            {subtitle && (
+              <p className="mt-4 text-sm text-foreground/70 max-w-2xl">{subtitle}</p>
+            )}
+          </div>
           <Link href="#" className="text-xs tracking-[0.2em] text-foreground hover:text-gold transition-colors pb-1 drop-shadow-md">
             EXPLORE ALL
           </Link>

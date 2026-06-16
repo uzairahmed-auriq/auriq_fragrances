@@ -204,6 +204,9 @@ model Product {
   wishlist_items  WishlistItem[]
   collections     ProductCollection[]
 
+  @@index([category_id])
+  @@index([is_active])
+  @@index([is_featured])
   @@map("products")
 }
 
@@ -236,6 +239,7 @@ model ProductVariant {
   bundle_items    BundleItem[]
 
   @@unique([product_id, size_ml])
+  @@index([product_id])
   @@map("product_variants")
 }
 
@@ -252,6 +256,7 @@ model ProductImage {
   sort_order  Int      @default(0)
   created_at  DateTime @default(now())
 
+  @@index([product_id])
   @@map("product_images")
 }
 
@@ -323,6 +328,8 @@ model Cart {
 
   items      CartItem[]
 
+  @@index([user_id])
+  @@index([session_id])
   @@map("carts")
 }
 
@@ -352,6 +359,7 @@ model Order {
   guest_email     String?       // for guest checkout
   guest_name      String?
   guest_phone     String?
+  session_id      String?       // for guest order verification
   address_id      Int?
   address         Address?      @relation(fields: [address_id], references: [id])
   // snapshot shipping address (in case address is deleted later)
@@ -376,6 +384,10 @@ model Order {
   items           OrderItem[]
   return_requests ReturnRequest[]
 
+  @@index([user_id])
+  @@index([session_id])
+  @@index([status])
+  @@index([created_at])
   @@map("orders")
 }
 
@@ -455,6 +467,7 @@ model Review {
   rating     Int      // 1-5
   comment    String?
   is_active  Boolean  @default(true)
+  is_featured Boolean @default(false)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

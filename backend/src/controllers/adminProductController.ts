@@ -3,11 +3,12 @@ import prisma from '../config/database';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import axios from 'axios';
 import { ENV } from '../config/env';
+import { logAdminAction } from '../utils/auditLog';
 
 const revalidateFrontend = async (tag: string) => {
   try {
     // Attempt to revalidate frontend cache
-    await axios.post('http://localhost:3000/api/revalidate', {
+    await axios.post(`${ENV.FRONTEND_URL}/api/revalidate`, {
       tag,
       secret: ENV.REVALIDATION_SECRET
     });
@@ -65,6 +66,8 @@ export const createProduct = async (req: Request, res: Response) => {
 
     await revalidateFrontend('products');
 
+    await logAdminAction((req as any).admin.id, 'CREATE_PRODUCT', 'Product', product.id, null, { name: product.name });
+
     res.json({ success: true, data: product });
   } catch (error) {
     console.error('CREATE PRODUCT ERROR:', error);
@@ -74,14 +77,32 @@ export const createProduct = async (req: Request, res: Response) => {
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        category: true,
-        variants: true,
-        images: true,
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
+
+    const [total, products] = await Promise.all([
+      prisma.product.count(),
+      prisma.product.findMany({
+        include: {
+          category: true,
+          variants: true,
+          images: true,
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ]);
+
+    res.json({ 
+      success: true, 
+      data: products,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
       }
     });
-    res.json({ success: true, data: products });
   } catch (error) {
     console.error('ADMIN GET PRODUCTS ERROR:', error);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -181,6 +202,9 @@ export const updateProduct = async (req: Request, res: Response) => {
     }
 
     await revalidateFrontend('products')
+
+    await logAdminAction((req as any).admin.id, 'UPDATE_PRODUCT', 'Product', product.id, existing, product);
+
     res.json({ success: true, data: product })
   } catch (error) {
     console.error('UPDATE PRODUCT ERROR:', error)
@@ -207,6 +231,9 @@ export const deleteProduct = async (req: Request, res: Response) => {
     })
 
     await revalidateFrontend('products')
+
+    await logAdminAction((req as any).admin.id, 'DELETE_PRODUCT', 'Product', existing.id, existing, { is_active: false });
+
     res.json({ success: true, message: 'Product deleted successfully' })
   } catch (error) {
     console.error('DELETE PRODUCT ERROR:', error)

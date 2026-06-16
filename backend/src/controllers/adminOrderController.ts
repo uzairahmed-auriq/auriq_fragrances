@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
+import { logAdminAction } from '../utils/auditLog';
 
 export const getAllOrders = async (req: Request, res: Response) => {
   try {
@@ -27,6 +28,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
       where: { id: parseInt(id as string) },
       data: { status }
     });
+
+    await logAdminAction((req as any).admin.id, 'UPDATE_ORDER_STATUS', 'Order', order.id, null, { status });
 
     res.json({ success: true, data: order });
   } catch (error) {

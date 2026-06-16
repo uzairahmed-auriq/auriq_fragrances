@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
+import { logAdminAction } from '../utils/auditLog';
 
 export const createCategory = async (req: Request, res: Response) => {
   try {
@@ -12,6 +13,8 @@ export const createCategory = async (req: Request, res: Response) => {
         is_active: is_active ?? true
       }
     });
+
+    await logAdminAction((req as any).admin.id, 'CREATE_CATEGORY', 'Category', category.id, null, { name: category.name });
 
     res.json({ success: true, data: category });
   } catch (error) {
@@ -33,6 +36,8 @@ export const updateCategory = async (req: Request, res: Response) => {
         is_active
       }
     });
+
+    await logAdminAction((req as any).admin.id, 'UPDATE_CATEGORY', 'Category', category.id, null, category);
 
     res.json({ success: true, data: category });
   } catch (error) {

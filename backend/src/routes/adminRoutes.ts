@@ -7,6 +7,8 @@ import { createAd, getAllAds, deleteAd, toggleAdStatus } from '../controllers/ad
 import { getAllOrders, updateOrderStatus, getDashboardStats } from '../controllers/adminOrderController';
 import { getAllDiscounts, createDiscount, updateDiscount, deleteDiscount } from '../controllers/adminDiscountController';
 import { verifyAdmin } from '../middleware/authMiddleware';
+import { validateRequest } from '../middleware/validateRequest';
+import { createProductSchema, updateProductSchema, categorySchema, adSchema } from '../validators/schemas';
 
 const router = Router();
 
@@ -23,6 +25,7 @@ import { getMessages, updateMessageStatus, deleteMessage } from '../controllers/
 import { getSettingsByGroup, updateSettings } from '../controllers/adminSettingsController';
 import { getAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial } from '../controllers/adminTestimonialController';
 import { getProfile, updateProfile, updatePassword, logoutOtherDevices } from '../controllers/adminProfileController';
+import { getSubscribers, deleteSubscriber, exportSubscribersCSV } from '../controllers/adminNewsletterController';
 
 router.get('/profile', getProfile);
 router.put('/profile', upload.single('profile_image'), updateProfile);
@@ -54,18 +57,18 @@ router.delete('/messages/:id', deleteMessage);
 
 // Products
 router.get('/products', getAllProducts);
-router.post('/products', upload.array('images', 5), createProduct);
-router.put('/products/:id', upload.array('images', 5), updateProduct);
+router.post('/products', upload.array('images', 5), validateRequest(createProductSchema), createProduct);
+router.put('/products/:id', upload.array('images', 5), validateRequest(updateProductSchema), updateProduct);
 router.delete('/products/:id', deleteProduct);
 router.delete('/products/images/:imageId', deleteProductImage);
 
 // Categories
-router.post('/categories', createCategory);
-router.put('/categories/:id', updateCategory);
+router.post('/categories', validateRequest(categorySchema), createCategory);
+router.put('/categories/:id', validateRequest(categorySchema), updateCategory);
 
 // Ads
 router.get('/ads', getAllAds);
-router.post('/ads', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'mobile_image', maxCount: 1 }]), createAd);
+router.post('/ads', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'mobile_image', maxCount: 1 }]), validateRequest(adSchema), createAd);
 router.delete('/ads/:id', deleteAd);
 router.put('/ads/:id/status', toggleAdStatus);
 
@@ -78,6 +81,11 @@ router.get('/discounts', getAllDiscounts);
 router.post('/discounts', createDiscount);
 router.put('/discounts/:id', updateDiscount);
 router.delete('/discounts/:id', deleteDiscount);
+
+// Newsletters
+router.get('/newsletters', getSubscribers);
+router.delete('/newsletters/:id', deleteSubscriber);
+router.get('/export/subscribers', exportSubscribersCSV);
 
 // Story (CMS)
 import { updateStory } from '../controllers/storyController';
