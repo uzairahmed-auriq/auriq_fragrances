@@ -20,6 +20,18 @@ export const subscribeNewsletter = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Server error' })
   }
 }
+export const getShippingConfig = async (req: Request, res: Response) => {
+  try {
+    const config = await prisma.shippingConfig.findFirst()
+    res.json({
+      success: true,
+      data: config || { flat_fee: 250, free_shipping_above: 5000 }
+    })
+  } catch (error) {
+    console.error('GET SHIPPING CONFIG ERROR:', error)
+    res.status(500).json({ success: false, message: 'Server error' })
+  }
+}
 
 export const submitContact = async (req: Request, res: Response) => {
   try {

@@ -13,5 +13,12 @@ export const miscService = {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Failed to subscribe to newsletter');
     return data;
+  },
+
+  async getShippingConfig() {
+    const res = await fetch(`${API_URL}/shipping-config`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to fetch shipping config');
+    return data.data;
   }
 };

@@ -8,6 +8,7 @@ import { adminProductService } from "../services/adminProductService";
 
 export default function AdminProducts() {
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -126,6 +127,43 @@ export default function AdminProducts() {
     }
   };
 
+  const handleEditProduct = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  if (!editingProduct) return;
+  setSaving(true);
+  setError("");
+
+  try {
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const price = formData.get("price");
+    const stock = formData.get("stock_quantity");
+    const existingVariant = editingProduct.variants?.[0];
+    const variant = {
+      id: existingVariant?.id,
+      size_ml: existingVariant?.size_ml || 100,
+      price: Number(price),
+      stock_quantity: Number(stock),
+      sku: existingVariant?.sku || `AQ-${Math.floor(Math.random() * 10000)}`
+    };
+    formData.append("variants_json", JSON.stringify([variant]));
+
+    formData.delete("price");
+    formData.delete("stock_quantity");
+
+    const res = await adminProductService.update(editingProduct.id, formData);
+    if (res.success) {
+      setEditingProduct(null);
+      fetchProducts();
+    }
+  } catch (err: any) {
+    setError(err.message || "Failed to update product");
+  } finally {
+    setSaving(false);
+  }
+};
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -242,8 +280,7 @@ export default function AdminProducts() {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button className="text-foreground/50 hover:text-gold transition-colors p-2 bg-foreground/5 rounded-lg">
-                            <Edit className="w-4 h-4" />
+                          <button onClick={() => setEditingProduct(product)} className="text-foreground/50 hover:text-gold transition-colors p-2 bg-foreground/5 rounded-lg"><Edit className="w-4 h-4" />
                           </button>
                           <button 
                             className="text-foreground/50 hover:text-red-500 transition-colors p-2 bg-foreground/5 rounded-lg disabled:opacity-50"
@@ -264,55 +301,55 @@ export default function AdminProducts() {
       </div>
 
       {/* Modals */}
-      <Modal isOpen={isAddProductOpen} onClose={() => setIsAddProductOpen(false)} title="Add New Product" maxWidth="max-w-2xl">
-        <form className="flex flex-col gap-6" onSubmit={handleAddProduct}>
-          
-          {error && <div className="text-red-500 text-sm bg-red-500/10 p-3 rounded-lg text-center">{error}</div>}
+      <Modal isOpen={!!editingProduct} onClose={() => setEditingProduct(null)} title="Edit Product" maxWidth="max-w-2xl">
+  {editingProduct && (
+    <form className="flex flex-col gap-6" onSubmit={handleEditProduct}>
+      {error && <div className="text-red-500 text-sm bg-red-500/10 p-3 rounded-lg text-center">{error}</div>}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Product Name</label>
-              <input type="text" name="name" placeholder="e.g. Royal Oud" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Category ID</label>
-              <input type="number" name="category_id" placeholder="1" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Price (Rs.)</label>
-              <input type="number" name="price" placeholder="15000" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Stock Quantity</label>
-              <input type="number" name="stock_quantity" placeholder="50" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
-            </div>
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
-              <textarea name="description" placeholder="A rich, woody fragrance..." rows={3} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
-            </div>
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Upload Images (Max 3)</label>
-              <input 
-                type="file" 
-                name="images" 
-                multiple 
-                accept="image/*" 
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 3) {
-                    alert("You can only upload a maximum of 3 images.");
-                    e.target.value = "";
-                  }
-                }}
-                className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-gold/10 file:text-gold hover:file:bg-gold/20" 
-                required 
-              />
-            </div>
-          </div>
-          <button type="submit" disabled={saving} className="w-full bg-gold text-background font-bold uppercase tracking-widest py-3 rounded-lg text-sm mt-4 hover:bg-gold/90 transition-colors disabled:opacity-50">
-            {saving ? "Saving Product..." : "Save Product"}
-          </button>
-        </form>
-      </Modal>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Product Name</label>
+          <input type="text" name="name" defaultValue={editingProduct.name} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Category ID</label>
+          <input type="number" name="category_id" defaultValue={editingProduct.category_id} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Price (Rs.)</label>
+          <input type="number" name="price" defaultValue={editingProduct.variants?.[0]?.price} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Stock Quantity</label>
+          <input type="number" name="stock_quantity" defaultValue={editingProduct.variants?.[0]?.stock_quantity} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+        </div>
+        <div className="flex flex-col gap-2 md:col-span-2">
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
+          <textarea name="description" defaultValue={editingProduct.description} rows={3} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+        </div>
+        <div className="flex flex-col gap-2 md:col-span-2">
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Upload New Images (optional, max 3)</label>
+          <input
+            type="file"
+            name="images"
+            multiple
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files.length > 3) {
+                alert("You can only upload a maximum of 3 images.");
+                e.target.value = "";
+              }
+            }}
+            className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-gold/10 file:text-gold hover:file:bg-gold/20"
+          />
+        </div>
+      </div>
+      <button type="submit" disabled={saving} className="w-full bg-gold text-background font-bold uppercase tracking-widest py-3 rounded-lg text-sm mt-4 hover:bg-gold/90 transition-colors disabled:opacity-50">
+        {saving ? "Updating Product..." : "Update Product"}
+      </button>
+    </form>
+  )}
+</Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal 

@@ -1,24 +1,29 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, ArrowLeft, ShieldCheck, CreditCard } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-
 import { useCart } from "../context/CartContext";
+import { useState, useEffect } from "react";
+import { miscService } from "../services/miscService";
+import { formatPrice } from "../utils/format";
 
 export default function CartPage() {
   const { cartItems, cartTotal, updateQuantity, removeItem, isLoading } = useCart();
+  const [shippingConfig, setShippingConfig] = useState<{ flat_fee: string; free_shipping_above: string } | null>(null);
 
-  const shipping = cartTotal > 20000 ? 0 : 500;
+  useEffect(() => {
+    miscService.getShippingConfig()
+      .then(setShippingConfig)
+      .catch(() => setShippingConfig({ flat_fee: "250", free_shipping_above: "5000" }));
+  }, []);
+
+  const flatFee = shippingConfig ? Number(shippingConfig.flat_fee) : 250;
+  const freeAbove = shippingConfig ? Number(shippingConfig.free_shipping_above) : 5000;
+  const shipping = cartTotal >= freeAbove ? 0 : flatFee;
   const total = cartTotal + shipping;
-
-
-  const formatPrice = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(amount).replace('PKR', 'Rs.');
-  };
 
   return (
     <>

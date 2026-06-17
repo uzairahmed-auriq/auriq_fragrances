@@ -10,6 +10,12 @@ export const adminProductService = {
       body: formData,
     });
   },
+  update: async (id: number | string, formData: FormData) => {
+    return adminFetch(`/products/${id}`, {
+      method: 'PUT',
+      body: formData,
+    });
+  },
   delete: async (id: number | string) => {
     return adminFetch(`/products/${id}`, {
       method: 'DELETE',

@@ -296,7 +296,7 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
                             fill
                             className="object-cover opacity-90 transition-all duration-700 group-hover:scale-110 group-hover:opacity-100"
                           />
-                          <ProductCardActions productId={product.id} />
+                          <ProductCardActions productId={product.id} variantId={product.variants?.[0]?.id} />
                         </Link>
 
                         <div className="flex flex-col text-center relative z-10 px-2">
