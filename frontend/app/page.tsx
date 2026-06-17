@@ -3,39 +3,31 @@ import Footer from "./components/layout/Footer";
 import Hero from "./components/home/Hero";
 import FeaturedAds from "./components/home/FeaturedAds";
 import FeaturedCollection from "./components/home/FeaturedCollection";
-import BestSellers from "./components/home/BestSellers";
 import OurStory from "./components/home/OurStory";
-import WhyChooseAuriq from "./components/home/WhyChooseAuriq";
 import ContactFeedback from "./components/home/ContactFeedback";
 import { productService } from "./services/productService";
 import { adService } from "./services/adService";
-import { storyService } from "./services/storyService";
-
 export default async function Home() {
   // Fetch dynamic data in parallel
-  const [featuredData, bestSellersData, adsData, storyData] = await Promise.all([
+  const [featuredData, adsData, settingsData] = await Promise.all([
     productService.getFeaturedProducts().catch(() => ({ data: [] })),
-    productService.getBestSellers().catch(() => ({ data: [] })),
     adService.getActiveAds().catch(() => ({ data: [] })),
-    storyService.getStory().catch(() => ({ data: null }))
+    import('./services/publicSettingsService').then(m => m.publicSettingsService.getSettingsByGroup("HOMEPAGE")).catch(() => ({}))
   ]);
 
   const featuredProducts = featuredData.data || [];
-  const bestSellers = bestSellersData.data || [];
   const ads = adsData.data || [];
-  const story = storyData.data || null;
+  const settings = settingsData || {};
 
   return (
     <>
       <Header />
       
       <main className="flex-1 w-full">
-        <FeaturedAds ads={ads} />
-        <Hero ads={ads} />
+        <FeaturedAds ads={ads} settings={settings} />
+        <Hero ads={ads} settings={settings} />
         <FeaturedCollection products={featuredProducts} />
-        <BestSellers products={bestSellers} />
-        <OurStory story={story} />
-        <WhyChooseAuriq />
+        <OurStory />
         <ContactFeedback />
       </main>
 

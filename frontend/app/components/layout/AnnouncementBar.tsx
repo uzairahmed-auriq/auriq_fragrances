@@ -60,6 +60,16 @@ export default function AnnouncementBar() {
   const announcementText = settings.ANNOUNCEMENT_TEXT || "Free Delivery on Orders Above Rs. 5000";
   const announcementLink = settings.ANNOUNCEMENT_LINK || null;
 
+  if (!isLoaded) {
+    return (
+      <div 
+        className={`w-full bg-gold h-[40px] transition-all duration-700 ease-in-out overflow-hidden
+          ${isVisible ? 'max-h-[40px] opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}
+        `}
+      />
+    );
+  }
+
   return (
     <div 
       className={`w-full bg-gold text-black text-sm font-medium flex items-center justify-center tracking-wide transition-all duration-700 ease-in-out overflow-hidden

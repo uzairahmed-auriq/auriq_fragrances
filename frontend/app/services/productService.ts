@@ -11,7 +11,7 @@ export const productService = {
 
   async getFeaturedProducts() {
     const res = await fetch(`${API_URL}/products/featured`, {
-      next: { tags: ['products', 'featured-products'], revalidate: 3600 }
+      cache: 'no-store'
     });
     if (!res.ok) throw new Error('Failed to fetch featured products');
     return res.json();

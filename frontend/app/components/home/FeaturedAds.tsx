@@ -6,18 +6,13 @@ import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { publicSettingsService } from "../../services/publicSettingsService";
 
-export default function FeaturedAds({ ads = [] }: { ads?: any[] }) {
+export default function FeaturedAds({ ads = [], settings = {} }: { ads?: any[], settings?: Record<string, string> }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [settings, setSettings] = useState<Record<string, string>>({});
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then((data) => {
-      setSettings(data);
-      setIsLoaded(true);
-      setTimeout(() => setIsVisible(true), 100);
-    });
+    // Delay visibility to allow CSS transitions
+    setTimeout(() => setIsVisible(true), 100);
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev === ads.length - 1 ? 0 : prev + 1));
@@ -25,7 +20,7 @@ export default function FeaturedAds({ ads = [] }: { ads?: any[] }) {
     return () => clearInterval(timer);
   }, [ads.length]);
 
-  if (isLoaded && settings.BANNERS_ENABLED === 'false') {
+  if (settings.BANNERS_ENABLED === 'false') {
     return null;
   }
 

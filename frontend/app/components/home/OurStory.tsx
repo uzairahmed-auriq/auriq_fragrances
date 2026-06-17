@@ -2,25 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-interface StoryProps {
-  story?: {
-    subtitle?: string;
-    title?: string;
-    paragraph1?: string;
-    paragraph2?: string;
-    image1_url?: string;
-    image2_url?: string | null;
-  } | null;
-}
-
-export default function OurStory({ story }: StoryProps) {
-  // Default fallbacks in case API fails or returns empty
-  const subtitle = story?.subtitle || "The Heritage";
-  const title = story?.title || "Crafting The Essence Of Elegance";
-  const paragraph1 = story?.paragraph1 || "Every drop of Auriq is a testament to the art of fine perfumery. We source the rarest, most exquisite ingredients from across the globe—from the fields of Grasse to the deep forests of the East—to create fragrances that are not just scents, but timeless memories.";
-  const paragraph2 = story?.paragraph2 || "Our master perfumers blend traditional techniques with modern innovation, ensuring that every bottle holds a symphony of notes that evolve beautifully on your skin throughout the day.";
-  const image1 = story?.image1_url || "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?q=80&w=2787&auto=format&fit=crop";
-  const image2 = story?.image2_url;
+export default function OurStory() {
+  // Hardcoded as requested
+  const subtitle = "WHY CHOOSE AURIQ";
+  const title = "The Auriq Standard";
+  const paragraph1 = "Sourced from the finest ingredients worldwide, ensuring an unparalleled olfactory experience. 100% genuine products crafted by master perfumers with a rich heritage in scent making.";
+  const paragraph2 = "Complimentary express shipping on all orders, delivered in pristine condition to your doorstep. Dedicated concierge service ready to assist you in finding your perfect signature scent.";
+  const image1 = "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?q=80&w=2787&auto=format&fit=crop";
+  const image2 = null;
 
   return (
     <section className="py-32 bg-perfume-main relative overflow-hidden" id="story">
@@ -79,12 +68,6 @@ export default function OurStory({ story }: StoryProps) {
             <p className="text-foreground/80 mb-10 leading-relaxed font-semibold text-sm tracking-wide whitespace-pre-wrap">
               {paragraph2}
             </p>
-            <Link 
-              href="#philosophy" 
-              className="inline-flex items-center gap-4 text-xs text-foreground/80 font-semibold tracking-[0.2em] hover:text-gold transition-colors w-max uppercase group"
-            >
-              <span className="flex items-center gap-2">READ FULL STORY <ArrowRight className="w-4 h-4 transition-transform duration-500 group-hover:translate-x-2" /></span>
-            </Link>
           </div>
         </div>
       </div>

@@ -2,43 +2,30 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { publicSettingsService } from "../../services/publicSettingsService";
 
-export default function PromotionalCards({ 
-  className = "py-8 md:py-12 bg-perfume-main relative overflow-hidden",
-  showNoise = true,
-}: { 
-  className?: string;
-  showNoise?: boolean;
-}) {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-  const [isLoaded, setIsLoaded] = useState(false);
+export default function PromotionalCards({ className = "", showNoise = true, settings = {} }: { className?: string, showNoise?: boolean, settings?: Record<string, string> }) {
+  // Use settings passed from parent to avoid hydration flashes
 
-  useEffect(() => {
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then((data) => {
-      setSettings(data);
-      setIsLoaded(true);
-    });
-  }, []);
-
-  const displayAds = [
+  const promos = [
     {
-      title: isLoaded && settings.PROMO1_TITLE ? settings.PROMO1_TITLE : "The Midnight Collection",
-      tag: isLoaded && settings.PROMO1_TAG ? settings.PROMO1_TAG : "New Arrival",
-      image_url: isLoaded && settings.PROMO1_IMAGE ? settings.PROMO1_IMAGE : "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop",
-      link_url: isLoaded && settings.PROMO1_LINK ? settings.PROMO1_LINK : "/collections?sort=new-arrivals",
-      buttonText: isLoaded && settings.PROMO1_BTN ? settings.PROMO1_BTN : "Discover Now"
+      id: "promo1",
+      tag: settings.PROMO1_TAG ? settings.PROMO1_TAG : "New Arrival",
+      title: settings.PROMO1_TITLE ? settings.PROMO1_TITLE : "The Midnight Collection",
+      image_url: settings.PROMO1_IMAGE ? settings.PROMO1_IMAGE : "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=2787&auto=format&fit=crop",
+      link_url: settings.PROMO1_LINK ? settings.PROMO1_LINK : "/collections",
+      buttonText: settings.PROMO1_BTN ? settings.PROMO1_BTN : "Discover Now"
     },
     {
-      title: isLoaded && settings.PROMO2_TITLE ? settings.PROMO2_TITLE : "Summer Exclusives",
-      tag: isLoaded && settings.PROMO2_TAG ? settings.PROMO2_TAG : "Limited Edition",
-      image_url: isLoaded && settings.PROMO2_IMAGE ? settings.PROMO2_IMAGE : "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=2787&auto=format&fit=crop",
-      link_url: isLoaded && settings.PROMO2_LINK ? settings.PROMO2_LINK : "/collections?sort=best-sellers",
-      buttonText: isLoaded && settings.PROMO2_BTN ? settings.PROMO2_BTN : "Shop Sale"
+      id: "promo2",
+      tag: settings.PROMO2_TAG ? settings.PROMO2_TAG : "Limited Edition",
+      title: settings.PROMO2_TITLE ? settings.PROMO2_TITLE : "Summer Exclusives",
+      image_url: settings.PROMO2_IMAGE ? settings.PROMO2_IMAGE : "https://images.unsplash.com/photo-1615634260167-c8cdede054de?q=80&w=2800&auto=format&fit=crop",
+      link_url: settings.PROMO2_LINK ? settings.PROMO2_LINK : "/collections?sort=best-sellers",
+      buttonText: settings.PROMO2_BTN ? settings.PROMO2_BTN : "Shop Sale"
     }
   ];
 
-  if (isLoaded && settings.PROMO_CARDS_ENABLED === 'false') {
+  if (settings.PROMO_CARDS_ENABLED === 'false') {
     return null;
   }
 
@@ -49,7 +36,7 @@ export default function PromotionalCards({
 
       <div className="container-lux relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {displayAds.map((ad, idx) => (
+          {promos.map((ad, idx) => (
             <Link key={idx} href={ad.link_url || "/collections"} className="group block relative aspect-[4/3] md:aspect-[16/9] lg:aspect-[2/1] rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black/50">
               <Image
                 src={ad.image_url}

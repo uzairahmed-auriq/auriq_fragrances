@@ -17,7 +17,7 @@ export default async function CollectionsPage() {
       products = response.data;
     }
   } catch (err) {
-    console.error("Failed to fetch collections on server", err);
+    console.warn("Failed to fetch collections on server", err instanceof Error ? err.message : String(err));
   }
 
   return (

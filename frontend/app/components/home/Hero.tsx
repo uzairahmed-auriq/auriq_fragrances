@@ -5,17 +5,9 @@ import Link from "next/link";
 import PromotionalCards from "./PromotionalCards";
 import { publicSettingsService } from "../../services/publicSettingsService";
 
-export default function Hero({ ads = [] }: { ads?: any[] }) {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then((data) => {
-      setSettings(data);
-      setIsLoaded(true);
-    });
-  }, []);
-
+export default function Hero({ ads = [], settings = {} }: { ads?: any[], settings?: Record<string, string> }) {
+  // Use settings passed from server component to avoid hydration flashes
+  
   // Hero section is forced to be visible based on user request
 
   const title = settings.HERO_TITLE || "AURIQ";
@@ -23,7 +15,7 @@ export default function Hero({ ads = [] }: { ads?: any[] }) {
   const description = settings.HERO_DESCRIPTION || "A premium fragrance experience crafted for those who appreciate elegance, sophistication, and timeless luxury.";
   
   const cta1Text = settings.HERO_CTA1_TEXT || "EXPLORE COLLECTION";
-  const cta1Link = settings.HERO_CTA1_LINK || "#collection";
+  const cta1Link = settings.HERO_CTA1_LINK || "/collections";
 
   // Use CMS Background video or image, or fallback to default
   const videoUrl = settings.HERO_VIDEO_URL || "/video.mp4";
@@ -69,7 +61,7 @@ export default function Hero({ ads = [] }: { ads?: any[] }) {
             {cta1Text}
           </Link>
           <Link 
-            href="#story" 
+            href="/about" 
             className="px-10 py-4 border border-white/80 text-white font-medium tracking-wide hover:bg-white hover:text-black transition-colors duration-300 text-sm shadow-xl backdrop-blur-sm uppercase"
           >
             OUR STORY
@@ -78,7 +70,7 @@ export default function Hero({ ads = [] }: { ads?: any[] }) {
 
         {/* Promotional Cards Overlay */}
         <div className="w-full max-w-7xl mx-auto mt-auto pb-4 md:pb-8">
-          <PromotionalCards className="w-full relative z-10" showNoise={false} />
+          <PromotionalCards className="w-full relative z-10" showNoise={false} settings={settings} />
         </div>
       </div>
     </section>

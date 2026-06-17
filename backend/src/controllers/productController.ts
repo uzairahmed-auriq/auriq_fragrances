@@ -39,15 +39,50 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
 export const getFeaturedProducts = async (req: Request, res: Response) => {
   try {
-    const products = await prisma.product.findMany({
-      where: { is_active: true, is_featured: true },
-      include: {
-        category: true,
-        variants: true,
-        images: { orderBy: { sort_order: 'asc' } },
-      },
-      take: 8
-    })
+    const settings = await prisma.systemSetting.findMany({
+      where: { group: 'HOMEPAGE' }
+    });
+    const settingsMap = settings.reduce((acc, curr) => ({ ...acc, [curr.key]: curr.value }), {} as Record<string, string>);
+
+    if (settingsMap.FEATURED_ENABLED === 'false') {
+      res.json({ success: true, data: [] });
+      return;
+    }
+
+    let products: any[] = [];
+
+    if (settingsMap.FEATURED_PRODUCT_IDS) {
+      const ids = settingsMap.FEATURED_PRODUCT_IDS.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      
+      if (ids.length > 0) {
+        const fetchedProducts = await prisma.product.findMany({
+          where: { id: { in: ids }, is_active: true },
+          include: {
+            category: true,
+            variants: true,
+            images: { orderBy: { sort_order: 'asc' } },
+          }
+        });
+        
+        // Reorder based on the exact sequence of IDs
+        products = ids.map(id => fetchedProducts.find(p => p.id === id)).filter(Boolean);
+        
+        // Hard limit of 12 as requested
+        products = products.slice(0, 12);
+      }
+    } else {
+      // Fallback if no specific products are set in CMS
+      products = await prisma.product.findMany({
+        where: { is_active: true, is_featured: true },
+        include: {
+          category: true,
+          variants: true,
+          images: { orderBy: { sort_order: 'asc' } },
+        },
+        take: 12
+      });
+    }
+
     res.json({ success: true, data: products })
   } catch (error) {
     console.error('GET FEATURED PRODUCTS ERROR:', error)
