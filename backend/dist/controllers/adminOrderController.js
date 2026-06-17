@@ -3,8 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateOrderStatus = exports.getAllOrders = void 0;
+exports.getDashboardStats = exports.updateOrderStatus = exports.getAllOrders = void 0;
 const database_1 = __importDefault(require("../config/database"));
+const auditLog_1 = require("../utils/auditLog");
 const getAllOrders = async (req, res) => {
     try {
         const orders = await database_1.default.order.findMany({
@@ -31,6 +32,7 @@ const updateOrderStatus = async (req, res) => {
             where: { id: parseInt(id) },
             data: { status }
         });
+        await (0, auditLog_1.logAdminAction)(req.admin.id, 'UPDATE_ORDER_STATUS', 'Order', order.id, null, { status });
         res.json({ success: true, data: order });
     }
     catch (error) {
@@ -39,3 +41,42 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 exports.updateOrderStatus = updateOrderStatus;
+const getDashboardStats = async (req, res) => {
+    try {
+        const [totalOrders, totalCustomers, totalProducts, pendingOrders, recentOrders, totalRevenueData] = await Promise.all([
+            database_1.default.order.count(),
+            database_1.default.user.count(),
+            database_1.default.product.count({ where: { is_active: true } }),
+            database_1.default.order.count({ where: { status: 'PENDING' } }),
+            database_1.default.order.findMany({
+                take: 5,
+                orderBy: { created_at: 'desc' },
+                include: {
+                    user: { select: { name: true, email: true } },
+                    items: true
+                }
+            }),
+            database_1.default.order.aggregate({
+                _sum: { total: true },
+                where: { payment_status: 'PAID' }
+            })
+        ]);
+        const totalRevenue = totalRevenueData._sum.total || 0;
+        res.json({
+            success: true,
+            data: {
+                total_orders: totalOrders,
+                total_customers: totalCustomers,
+                total_products: totalProducts,
+                pending_orders: pendingOrders,
+                total_revenue: totalRevenue,
+                recent_orders: recentOrders
+            }
+        });
+    }
+    catch (error) {
+        console.error('DASHBOARD STATS ERROR:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+};
+exports.getDashboardStats = getDashboardStats;

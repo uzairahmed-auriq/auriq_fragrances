@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import { Printer } from "lucide-react";
-import { orderService } from "../../services/orderService";
+import { getOrderById } from "../../services/orderService";
 import { useParams } from "next/navigation";
 
 export default function InvoicePage() {
@@ -18,7 +18,7 @@ export default function InvoicePage() {
     const fetchOrder = async () => {
       try {
         setLoading(true);
-        const res = await orderService.getOrderById(id);
+        const res = await getOrderById(id);
         if (res.success) {
           setOrder(res.data);
         }

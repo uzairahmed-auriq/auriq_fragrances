@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyUser = exports.verifyAdmin = void 0;
+exports.optionalUser = exports.verifyUser = exports.verifyAdmin = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const env_1 = require("../config/env");
 const verifyAdmin = (req, res, next) => {
@@ -40,7 +40,7 @@ const verifyUser = (req, res, next) => {
         const token = authHeader.split(' ')[1];
         const decoded = jsonwebtoken_1.default.verify(token, env_1.ENV.JWT_ACCESS_SECRET);
         req.user = {
-            id: decoded.id,
+            id: decoded.userId,
             email: decoded.email
         };
         next();
@@ -50,3 +50,21 @@ const verifyUser = (req, res, next) => {
     }
 };
 exports.verifyUser = verifyUser;
+const optionalUser = (req, res, next) => {
+    try {
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            const decoded = jsonwebtoken_1.default.verify(token, env_1.ENV.JWT_ACCESS_SECRET);
+            req.user = {
+                id: decoded.userId,
+                email: decoded.email
+            };
+        }
+    }
+    catch (error) {
+        // Ignore error, treat as guest
+    }
+    next();
+};
+exports.optionalUser = optionalUser;

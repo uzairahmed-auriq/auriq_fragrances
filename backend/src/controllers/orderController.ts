@@ -189,10 +189,30 @@ export const getMyOrders = async (req: UserAuthRequest, res: Response): Promise<
     const orders = await prisma.order.findMany({
       where: { user_id: userId },
       orderBy: { created_at: 'desc' },
-      include: { items: true }
+      include: { 
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: {
+                  include: { images: true }
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
-    res.json({ success: true, data: orders });
+    const mappedOrders = orders.map(order => ({
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        product: item.variant?.product
+      }))
+    }));
+
+    res.json({ success: true, data: mappedOrders });
   } catch (error) {
     console.error('Error fetching orders:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
@@ -204,9 +224,27 @@ export const getOrderById = async (req: UserAuthRequest, res: Response): Promise
     const { id } = req.params;
     const userId = req.user?.id;
 
+    const parsedId = parseInt(id as string, 10);
+    if (isNaN(parsedId)) {
+      res.status(400).json({ success: false, message: 'Invalid order ID' });
+      return;
+    }
+
     const order = await prisma.order.findUnique({
-      where: { id: parseInt(id as string) },
-      include: { items: true }
+      where: { id: parsedId },
+      include: { 
+        items: {
+          include: {
+            variant: {
+              include: {
+                product: {
+                  include: { images: true }
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
     if (!order) {
@@ -228,7 +266,15 @@ export const getOrderById = async (req: UserAuthRequest, res: Response): Promise
       }
     }
 
-    res.json({ success: true, data: order });
+    const mappedOrder = {
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        product: item.variant?.product
+      }))
+    };
+
+    res.json({ success: true, data: mappedOrder });
   } catch (error) {
     console.error('Error fetching order details:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });

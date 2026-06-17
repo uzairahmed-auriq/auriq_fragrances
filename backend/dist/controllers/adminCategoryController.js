@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateCategory = exports.createCategory = void 0;
 const database_1 = __importDefault(require("../config/database"));
+const auditLog_1 = require("../utils/auditLog");
 const createCategory = async (req, res) => {
     try {
         const { name, is_active } = req.body;
@@ -15,6 +16,7 @@ const createCategory = async (req, res) => {
                 is_active: is_active ?? true
             }
         });
+        await (0, auditLog_1.logAdminAction)(req.admin.id, 'CREATE_CATEGORY', 'Category', category.id, null, { name: category.name });
         res.json({ success: true, data: category });
     }
     catch (error) {
@@ -35,6 +37,7 @@ const updateCategory = async (req, res) => {
                 is_active
             }
         });
+        await (0, auditLog_1.logAdminAction)(req.admin.id, 'UPDATE_CATEGORY', 'Category', category.id, null, category);
         res.json({ success: true, data: category });
     }
     catch (error) {

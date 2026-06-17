@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { Package, ChevronRight, Download, Eye, Sparkles } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-import { orderService } from "../services/orderService";
+import { getMyOrders } from "../services/orderService";
 
 export default function OrdersPage() {
   const searchParams = useSearchParams();
@@ -20,7 +20,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const res = await orderService.getMyOrders();
+        const res = await getMyOrders();
         if (res.success) {
           setOrders(res.data);
         }

@@ -27,8 +27,8 @@ export default function AdminDashboard() {
     { name: "Avg Order Value", value: `Rs. ${data.averageOrderValue?.toLocaleString() || '0'}`, change: "", icon: Package },
   ];
 
-  const recentOrders = data.recentOrders?.map((order: any) => ({
-    id: `AUR-${order.id.toString().substring(0, 5)}`,
+  const recentOrders: any[] = data.recentOrders?.map((order: any) => ({
+    id: `AUR-${order.id?.toString().substring(0, 5)}`,
     customer: order.user?.name || 'Guest',
     date: new Date(order.created_at).toLocaleDateString(),
     total: `Rs. ${order.total?.toLocaleString() || '0'}`,

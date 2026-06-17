@@ -78,7 +78,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
             {/* Image Navigation Dots */}
             {images.length > 1 && (
               <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-2">
-                {images.map((_, idx) => (
+                {images.map((_: any, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentImageIndex(idx)}

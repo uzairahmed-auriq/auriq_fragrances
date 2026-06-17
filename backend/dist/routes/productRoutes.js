@@ -6,5 +6,7 @@ const router = (0, express_1.Router)();
 router.get('/', productController_1.getAllProducts);
 router.get('/featured', productController_1.getFeaturedProducts);
 router.get('/bestsellers', productController_1.getBestSellers);
+router.get('/search', productController_1.searchProducts);
+router.get('/feed/merchant-center', productController_1.generateMerchantCenterFeed);
 router.get('/:id', productController_1.getProductById);
 exports.default = router;

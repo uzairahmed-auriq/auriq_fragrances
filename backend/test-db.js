@@ -1,12 +1,15 @@
-require('dotenv').config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+
 async function main() {
   try {
-    const data = await prisma.discountCode.findMany();
-    console.log("Success:", data);
-  } catch (e) {
-    console.error("Error:", e.message);
+    const users = await prisma.user.findFirst();
+    console.log('Connected successfully:', users ? 'Found users' : 'No users, but connected');
+  } catch (error) {
+    console.error('Connection failed:', error);
+  } finally {
+    await prisma.$disconnect();
   }
 }
+
 main();
