@@ -4,23 +4,30 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { publicSettingsService } from "../../services/publicSettingsService";
 
 export default function FeaturedAds({ ads = [] }: { ads?: any[] }) {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Auto-advance the carousel every 5 seconds
   useEffect(() => {
-    const saved = localStorage.getItem("auriq_show_carousel");
-    if (saved !== null) {
-      setIsVisible(saved === "true");
-    }
+    publicSettingsService.getSettingsByGroup("HOMEPAGE").then((data) => {
+      setSettings(data);
+      setIsLoaded(true);
+      setTimeout(() => setIsVisible(true), 100);
+    });
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev === ads.length - 1 ? 0 : prev + 1));
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [ads.length]);
+
+  if (isLoaded && settings.BANNERS_ENABLED === 'false') {
+    return null;
+  }
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev === ads.length - 1 ? 0 : prev + 1));

@@ -51,7 +51,8 @@ export default function AnnouncementBar() {
   }, []);
 
   // If the CMS has disabled the announcement bar, don't render anything
-  if (isLoaded && settings.ANNOUNCEMENT_ENABLED === 'false') {
+  const isEnabled = settings.ANNOUNCEMENT_ENABLED === undefined || String(settings.ANNOUNCEMENT_ENABLED).trim() !== 'false';
+  if (isLoaded && !isEnabled) {
     return null;
   }
 

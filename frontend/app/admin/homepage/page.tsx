@@ -9,7 +9,7 @@ import { useAdminToast } from "../context/AdminToastContext";
 
 export default function HomepageCMS() {
   const { success, error } = useAdminToast();
-  const [activeTab, setActiveTab] = useState<'hero' | 'announcements' | 'banners' | 'featured' | 'bestsellers' | 'why_choose' | 'testimonials'>('hero');
+  const [activeTab, setActiveTab] = useState<'announcements' | 'banners' | 'promo_cards' | 'featured' | 'bestsellers' | 'why_choose' | 'testimonials'>('announcements');
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<Record<string, string>>({});
   
@@ -58,12 +58,6 @@ export default function HomepageCMS() {
         <h2 className="text-xs uppercase tracking-widest text-foreground/50 font-bold mb-4 px-4">Homepage Sections</h2>
         <nav className="flex flex-col gap-2">
           <button 
-            onClick={() => setActiveTab('hero')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all ${activeTab === 'hero' ? 'bg-gold/10 text-gold' : 'text-foreground/70 hover:bg-foreground/5'}`}
-          >
-            <ImageIcon className="w-4 h-4" /> Hero Section
-          </button>
-          <button 
             onClick={() => setActiveTab('announcements')}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all ${activeTab === 'announcements' ? 'bg-gold/10 text-gold' : 'text-foreground/70 hover:bg-foreground/5'}`}
           >
@@ -74,6 +68,12 @@ export default function HomepageCMS() {
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all ${activeTab === 'banners' ? 'bg-gold/10 text-gold' : 'text-foreground/70 hover:bg-foreground/5'}`}
           >
             <ImageIcon className="w-4 h-4" /> Banners
+          </button>
+          <button 
+            onClick={() => setActiveTab('promo_cards')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all ${activeTab === 'promo_cards' ? 'bg-gold/10 text-gold' : 'text-foreground/70 hover:bg-foreground/5'}`}
+          >
+            <ImageIcon className="w-4 h-4" /> Promotional Cards
           </button>
           <button 
             onClick={() => setActiveTab('featured')}
@@ -114,7 +114,7 @@ export default function HomepageCMS() {
             </div>
             
             {/* Global Save for Settings-based tabs */}
-            {['hero', 'announcements', 'featured', 'bestsellers', 'why_choose'].includes(activeTab) && (
+            {['announcements', 'banners', 'promo_cards', 'featured', 'bestsellers', 'why_choose'].includes(activeTab) && (
               <button 
                 onClick={saveSettings}
                 disabled={isSaving}
@@ -126,90 +126,23 @@ export default function HomepageCMS() {
             )}
           </div>
 
-          {/* Tab Content: HERO */}
-          {activeTab === 'hero' && (
+          {/* Tab Content: PROMO CARDS */}
+          {activeTab === 'promo_cards' && (
             <div className="space-y-6">
               <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
-                <h3 className="text-lg font-bold">Hero Section</h3>
+                <h3 className="text-lg font-bold">Promotional Cards</h3>
+                <p className="text-sm text-foreground/60">Manage the two promotional boxes displayed inside the Hero section.</p>
                 
-                <div className="flex items-center gap-3 border-b border-foreground/10 pb-4">
+                <div className="flex items-center gap-3 border-b border-foreground/10 pb-4 mb-6">
                   <input 
                     type="checkbox" 
-                    id="hero_enabled" 
-                    checked={settings.HERO_ENABLED !== 'false'}
-                    onChange={(e) => handleSettingChange('HERO_ENABLED', e.target.checked.toString())}
+                    id="promo_cards_enabled" 
+                    checked={settings.PROMO_CARDS_ENABLED !== 'false'}
+                    onChange={(e) => handleSettingChange('PROMO_CARDS_ENABLED', e.target.checked.toString())}
                     className="w-4 h-4 accent-gold"
                   />
-                  <label htmlFor="hero_enabled" className="text-sm font-bold text-foreground cursor-pointer">Enable Hero Section</label>
+                  <label htmlFor="promo_cards_enabled" className="text-sm font-bold text-foreground cursor-pointer">Enable Promotional Cards</label>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Hero Title</label>
-                    <input 
-                      type="text" 
-                      value={settings.HERO_TITLE || ''}
-                      onChange={(e) => handleSettingChange('HERO_TITLE', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Hero Subtitle</label>
-                    <input 
-                      type="text" 
-                      value={settings.HERO_SUBTITLE || ''}
-                      onChange={(e) => handleSettingChange('HERO_SUBTITLE', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Hero Description</label>
-                    <textarea 
-                      value={settings.HERO_DESCRIPTION || ''}
-                      onChange={(e) => handleSettingChange('HERO_DESCRIPTION', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Hero Background Image URL</label>
-                    <input 
-                      type="text" 
-                      value={settings.HERO_BG_IMAGE || ''}
-                      onChange={(e) => handleSettingChange('HERO_BG_IMAGE', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Hero Video URL (Overrides Image)</label>
-                    <input 
-                      type="text" 
-                      value={settings.HERO_VIDEO_URL || ''}
-                      onChange={(e) => handleSettingChange('HERO_VIDEO_URL', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Primary CTA Text</label>
-                    <input 
-                      type="text" 
-                      value={settings.HERO_CTA1_TEXT || ''}
-                      onChange={(e) => handleSettingChange('HERO_CTA1_TEXT', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Primary CTA Link</label>
-                    <input 
-                      type="text" 
-                      value={settings.HERO_CTA1_LINK || ''}
-                      onChange={(e) => handleSettingChange('HERO_CTA1_LINK', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                </div>
-
-                {/* Promotional Cards Section */}
-                <h4 className="text-md font-bold text-gold mt-8 border-t border-foreground/10 pt-6">Promotional Cards (Inside Hero)</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Promo Card 1 */}
                   <div className="space-y-4 bg-foreground/[0.02] p-4 rounded-xl border border-foreground/5">
@@ -464,7 +397,7 @@ export default function HomepageCMS() {
           {/* Tab Content: BANNERS (READ-ONLY DISPLAY) */}
           {activeTab === 'banners' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
+              <div className="flex justify-between items-center bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 mb-6">
                 <div>
                   <h3 className="text-lg font-bold">Current Banners</h3>
                   <p className="text-sm text-foreground/60">Banners managed globally via the Ads menu.</p>
@@ -472,6 +405,19 @@ export default function HomepageCMS() {
                 <a href="/admin/ads" className="bg-foreground/5 hover:bg-foreground/10 px-4 py-2 rounded-lg text-sm font-bold transition-colors">
                   Manage Ads
                 </a>
+              </div>
+
+              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 mb-6">
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="checkbox" 
+                    id="banners_enabled" 
+                    checked={settings.BANNERS_ENABLED !== 'false'}
+                    onChange={(e) => handleSettingChange('BANNERS_ENABLED', e.target.checked.toString())}
+                    className="w-4 h-4 accent-gold"
+                  />
+                  <label htmlFor="banners_enabled" className="text-sm font-bold text-foreground cursor-pointer">Enable Banners Section</label>
+                </div>
               </div>
 
               {ads.length > 0 ? (

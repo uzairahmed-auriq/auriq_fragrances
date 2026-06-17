@@ -77,8 +77,16 @@ export default function Header() {
     if (window.location.pathname === '/') {
       e.preventDefault();
       const hero = document.getElementById('hero');
-      if (hero) {
-        hero.scrollIntoView({ behavior: 'smooth' });
+      const header = document.querySelector('header');
+      if (hero && header) {
+        const headerHeight = header.offsetHeight;
+        const elementPosition = hero.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
       }
     }
   };

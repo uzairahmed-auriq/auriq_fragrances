@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { publicSettingsService } from "../../services/publicSettingsService";
 
 export default function PromotionalCards({ 
   className = "py-8 md:py-12 bg-perfume-main relative overflow-hidden",
@@ -9,22 +11,37 @@ export default function PromotionalCards({
   className?: string;
   showNoise?: boolean;
 }) {
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    publicSettingsService.getSettingsByGroup("HOMEPAGE").then((data) => {
+      setSettings(data);
+      setIsLoaded(true);
+    });
+  }, []);
+
   const displayAds = [
     {
-      title: "The Midnight Collection",
-      tag: "New Arrival",
-      image_url: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop",
-      link_url: "/collections?sort=new-arrivals",
-      buttonText: "Discover Now"
+      title: isLoaded && settings.PROMO1_TITLE ? settings.PROMO1_TITLE : "The Midnight Collection",
+      tag: isLoaded && settings.PROMO1_TAG ? settings.PROMO1_TAG : "New Arrival",
+      image_url: isLoaded && settings.PROMO1_IMAGE ? settings.PROMO1_IMAGE : "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop",
+      link_url: isLoaded && settings.PROMO1_LINK ? settings.PROMO1_LINK : "/collections?sort=new-arrivals",
+      buttonText: isLoaded && settings.PROMO1_BTN ? settings.PROMO1_BTN : "Discover Now"
     },
     {
-      title: "Summer Exclusives",
-      tag: "Limited Edition",
-      image_url: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=2787&auto=format&fit=crop",
-      link_url: "/collections?sort=best-sellers",
-      buttonText: "Shop Sale"
+      title: isLoaded && settings.PROMO2_TITLE ? settings.PROMO2_TITLE : "Summer Exclusives",
+      tag: isLoaded && settings.PROMO2_TAG ? settings.PROMO2_TAG : "Limited Edition",
+      image_url: isLoaded && settings.PROMO2_IMAGE ? settings.PROMO2_IMAGE : "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=2787&auto=format&fit=crop",
+      link_url: isLoaded && settings.PROMO2_LINK ? settings.PROMO2_LINK : "/collections?sort=best-sellers",
+      buttonText: isLoaded && settings.PROMO2_BTN ? settings.PROMO2_BTN : "Shop Sale"
     }
   ];
+
+  if (isLoaded && settings.PROMO_CARDS_ENABLED === 'false') {
+    return null;
+  }
+
   return (
     <section className={className}>
       {/* Noise overlay */}
