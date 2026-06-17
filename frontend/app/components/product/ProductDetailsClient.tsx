@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Heart, ShoppingBag, ShieldCheck, Truck, RefreshCcw } from "lucide-react";
 import { useCart } from "../../context/CartContext";
+import { useRouter } from "next/navigation";
 
 export default function ProductDetailsClient({ product }: { product: any }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'notes' | 'details'>('notes');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart } = useCart();
+  const router = useRouter();
   
   const images = product.images || [];
   
@@ -36,6 +38,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     if (firstVariant) {
       try {
         await addToCart(firstVariant.id, undefined, quantity);
+        router.push('/cart');
       } catch (error) {
         console.error('Failed to add to cart', error);
       }
