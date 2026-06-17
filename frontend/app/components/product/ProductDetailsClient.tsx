@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Heart, ShoppingBag, ShieldCheck, Truck, RefreshCcw } from "lucide-react";
 import { useCart } from "../../context/CartContext";
+import { useRouter } from "next/navigation";
 
 export default function ProductDetailsClient({ product }: { product: any }) {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'notes' | 'details'>('notes');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const { addItem } = useCart();
+  const { addToCart } = useCart();
+  const router = useRouter();
   
   const images = product.images || [];
   
@@ -32,13 +34,14 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(Number(amount)).replace('PKR', 'Rs.');
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (firstVariant) {
-      addItem({
-        variant: firstVariant,
-        quantity,
-      });
-      // Optionally show a toast or feedback
+      try {
+        await addToCart(firstVariant.id, undefined, quantity);
+        router.push('/cart');
+      } catch (error) {
+        console.error('Failed to add to cart', error);
+      }
     }
   };
 

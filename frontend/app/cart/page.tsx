@@ -102,7 +102,7 @@ export default function CartPage() {
                           {/* Mobile Remove & Quantity */}
                           <div className="flex items-center justify-between mt-4 md:hidden">
                             <div className="flex items-center border border-foreground/20 rounded-full h-8 px-2">
-                              <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-2 text-foreground/70 hover:text-foreground">-</button>
+                             <button onClick={() => item.quantity === 1 ? removeItem(item.id) : updateQuantity(item.id, item.quantity - 1)} className="px-2 text-foreground/70 hover:text-foreground">-</button>
                               <span className="w-6 text-center text-xs text-foreground">{item.quantity}</span>
                               <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 text-foreground/70 hover:text-foreground">+</button>
                             </div>
@@ -116,7 +116,7 @@ export default function CartPage() {
                       {/* Desktop Quantity */}
                       <div className="hidden md:flex col-span-3 justify-center">
                         <div className="flex items-center border border-foreground/20 rounded-full h-10 px-2 lux-glass-card">
-                          <button onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))} className="px-3 text-foreground/70 hover:text-foreground">-</button>
+                          <button onClick={() => item.quantity === 1 ? removeItem(item.id) : updateQuantity(item.id, item.quantity - 1)} className="px-3 text-foreground/70 hover:text-foreground">-</button>
                           <span className="w-8 text-center text-sm font-bold text-foreground">{item.quantity}</span>
                           <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-3 text-foreground/70 hover:text-foreground">+</button>
                         </div>
