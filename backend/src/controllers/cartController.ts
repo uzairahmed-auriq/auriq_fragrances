@@ -20,7 +20,7 @@ export const getCart = async (req: UserAuthRequest, res: Response): Promise<void
             variant: {
               include: {
                 product: {
-                  include: { images: { where: { is_primary: true } } }
+                  include: { images: { take: 1, orderBy: { sort_order: "asc" } } }
                 }
               }
             },
@@ -105,7 +105,7 @@ export const addToCart = async (req: UserAuthRequest, res: Response): Promise<vo
       include: {
         items: {
           include: {
-            variant: { include: { product: { include: { images: { where: { is_primary: true } } } } } },
+            variant: { include: { product: { include: { images: { take: 1, orderBy: { sort_order: "asc" } } } } } },
             bundle: true
           }
         }
