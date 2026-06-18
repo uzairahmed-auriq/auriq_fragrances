@@ -301,6 +301,54 @@ export default function AdminProducts() {
       </div>
 
       {/* Modals */}
+      <Modal isOpen={isAddProductOpen} onClose={() => setIsAddProductOpen(false)} title="Add New Product" maxWidth="max-w-2xl">
+  <form className="flex flex-col gap-6" onSubmit={handleAddProduct}>
+    {error && <div className="text-red-500 text-sm bg-red-500/10 p-3 rounded-lg text-center">{error}</div>}
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Product Name</label>
+        <input type="text" name="name" placeholder="e.g. Royal Oud" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Category ID</label>
+        <input type="number" name="category_id" placeholder="1" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Price (Rs.)</label>
+        <input type="number" name="price" placeholder="15000" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+      </div>
+      <div className="flex flex-col gap-2">
+        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Stock Quantity</label>
+        <input type="number" name="stock_quantity" placeholder="50" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+      </div>
+      <div className="flex flex-col gap-2 md:col-span-2">
+        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
+        <textarea name="description" placeholder="A rich, woody fragrance..." rows={3} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+      </div>
+      <div className="flex flex-col gap-2 md:col-span-2">
+        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Upload Images (Max 3)</label>
+        <input
+          type="file"
+          name="images"
+          multiple
+          accept="image/*"
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 3) {
+              alert("You can only upload a maximum of 3 images.");
+              e.target.value = "";
+            }
+          }}
+          className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-gold/10 file:text-gold hover:file:bg-gold/20"
+          required
+        />
+      </div>
+    </div>
+    <button type="submit" disabled={saving} className="w-full bg-gold text-background font-bold uppercase tracking-widest py-3 rounded-lg text-sm mt-4 hover:bg-gold/90 transition-colors disabled:opacity-50">
+      {saving ? "Saving Product..." : "Save Product"}
+    </button>
+  </form>
+</Modal>
       <Modal isOpen={!!editingProduct} onClose={() => setEditingProduct(null)} title="Edit Product" maxWidth="max-w-2xl">
   {editingProduct && (
     <form className="flex flex-col gap-6" onSubmit={handleEditProduct}>
