@@ -13,9 +13,9 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
     publicSettingsService.getSettingsByGroup("HOMEPAGE").then(setSettings);
   }, []);
 
-  if (!products || products.length === 0) return null;
+  if (!products || products.length === 0 || settings.FEATURED_ENABLED === 'false') return null;
 
-  const title = settings.FEATURED_TITLE || "Featured Collection";
+  const title = settings.FEATURED_TITLE || "Featured Collections";
   const subtitle = settings.FEATURED_SUBTITLE || "";
 
   return (
@@ -31,12 +31,12 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
               <p className="mt-4 text-sm text-foreground/70 max-w-2xl">{subtitle}</p>
             )}
           </div>
-          <Link href="#" className="text-xs tracking-[0.2em] text-foreground hover:text-gold transition-colors pb-1 drop-shadow-md">
+          <Link href="/collections" className="text-xs tracking-[0.2em] text-foreground hover:text-gold transition-colors pb-1 drop-shadow-md">
             EXPLORE ALL
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
           {products.map((product) => {
             const price = product.variants?.[0]?.price || 0;
             const imageUrl = product.images?.[0]?.image_url || "https://images.unsplash.com/photo-1595425970377-c9703cc48a7e?q=80&w=2800&auto=format&fit=crop";

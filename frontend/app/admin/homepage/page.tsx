@@ -5,16 +5,18 @@ import { Save, AlertCircle, RefreshCw, LayoutTemplate, MessageSquareQuote, Stars
 import { adminSettingsService } from "../services/adminSettingsService";
 import { adminAdService } from "../services/adminAdService";
 import { adminTestimonialService } from "../services/adminTestimonialService";
+import { adminProductService } from "../services/adminProductService";
 import { useAdminToast } from "../context/AdminToastContext";
 
 export default function HomepageCMS() {
   const { success, error } = useAdminToast();
-  const [activeTab, setActiveTab] = useState<'announcements' | 'banners' | 'promo_cards' | 'featured' | 'bestsellers' | 'why_choose' | 'testimonials'>('announcements');
+  const [activeTab, setActiveTab] = useState<'announcements' | 'banners' | 'promo_cards' | 'featured'>('announcements');
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<Record<string, string>>({});
   
   const [ads, setAds] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -22,16 +24,19 @@ export default function HomepageCMS() {
 
   const fetchData = async () => {
     try {
-      const [settingsData, adsData, testimonialsData] = await Promise.all([
+      const [settingsData, adsData, testimonialsData, productsData] = await Promise.all([
         adminSettingsService.getSettingsByGroup('HOMEPAGE'),
         adminAdService.getAds(),
-        adminTestimonialService.getAll().catch(() => [])
+        adminTestimonialService.getAll().catch(() => []),
+        adminProductService.getAll().catch(() => ({ data: [] }))
       ]);
       setSettings(settingsData);
       setAds(adsData || []);
       setTestimonials(testimonialsData || []);
+      setAllProducts(productsData.data || []);
     } catch (err) {
-      console.error(err);
+      console.warn("Network or API Error:", err instanceof Error ? err.message : String(err));
+      error("Failed to connect to the backend server.");
     }
   };
 
@@ -81,24 +86,6 @@ export default function HomepageCMS() {
           >
             <Stars className="w-4 h-4" /> Featured Collection
           </button>
-          <button 
-            onClick={() => setActiveTab('bestsellers')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all ${activeTab === 'bestsellers' ? 'bg-gold/10 text-gold' : 'text-foreground/70 hover:bg-foreground/5'}`}
-          >
-            <Stars className="w-4 h-4" /> Best Sellers
-          </button>
-          <button 
-            onClick={() => setActiveTab('why_choose')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all ${activeTab === 'why_choose' ? 'bg-gold/10 text-gold' : 'text-foreground/70 hover:bg-foreground/5'}`}
-          >
-            <LayoutTemplate className="w-4 h-4" /> Why Choose Auriq
-          </button>
-          <button 
-            onClick={() => setActiveTab('testimonials')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide transition-all ${activeTab === 'testimonials' ? 'bg-gold/10 text-gold' : 'text-foreground/70 hover:bg-foreground/5'}`}
-          >
-            <MessageSquareQuote className="w-4 h-4" /> Testimonials
-          </button>
         </nav>
       </div>
 
@@ -114,7 +101,7 @@ export default function HomepageCMS() {
             </div>
             
             {/* Global Save for Settings-based tabs */}
-            {['announcements', 'banners', 'promo_cards', 'featured', 'bestsellers', 'why_choose'].includes(activeTab) && (
+            {['announcements', 'banners', 'promo_cards', 'featured'].includes(activeTab) && (
               <button 
                 onClick={saveSettings}
                 disabled={isSaving}
@@ -246,147 +233,125 @@ export default function HomepageCMS() {
             <div className="space-y-6">
               <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
                 <h3 className="text-lg font-bold">Featured Collection</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2 md:col-span-2">
+                
+                <div className="flex items-center gap-3 border-b border-foreground/10 pb-4">
+                  <input 
+                    type="checkbox" 
+                    id="featured_enabled" 
+                    checked={settings.FEATURED_ENABLED !== 'false'}
+                    onChange={(e) => handleSettingChange('FEATURED_ENABLED', e.target.checked.toString())}
+                    className="w-4 h-4 accent-gold"
+                  />
+                  <label htmlFor="featured_enabled" className="text-sm font-bold text-foreground cursor-pointer">Enable Featured Collection</label>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Section Title</label>
                     <input 
                       type="text" 
                       value={settings.FEATURED_TITLE || ''}
                       onChange={(e) => handleSettingChange('FEATURED_TITLE', e.target.value)}
+                      placeholder="e.g. Featured Collections"
                       className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
                     />
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Section Subtitle</label>
-                    <textarea 
-                      value={settings.FEATURED_SUBTITLE || ''}
-                      onChange={(e) => handleSettingChange('FEATURED_SUBTITLE', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Target Category ID</label>
-                    <input 
-                      type="number" 
-                      value={settings.FEATURED_CATEGORY_ID || ''}
-                      onChange={(e) => handleSettingChange('FEATURED_CATEGORY_ID', e.target.value)}
-                      placeholder="e.g. 1"
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab Content: BEST SELLERS */}
-          {activeTab === 'bestsellers' && (
-            <div className="space-y-6">
-              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
-                <h3 className="text-lg font-bold">Best Sellers</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Section Title</label>
-                    <input 
-                      type="text" 
-                      value={settings.BESTSELLERS_TITLE || ''}
-                      onChange={(e) => handleSettingChange('BESTSELLERS_TITLE', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Product Limit</label>
-                    <input 
-                      type="number" 
-                      value={settings.BESTSELLERS_LIMIT || '4'}
-                      onChange={(e) => handleSettingChange('BESTSELLERS_LIMIT', e.target.value)}
-                      className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Tab Content: WHY CHOOSE AURIQ */}
-          {activeTab === 'why_choose' && (
-            <div className="space-y-6">
-              <div className="bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6 space-y-6">
-                <h3 className="text-lg font-bold">Why Choose Auriq</h3>
-                <div className="space-y-2 mb-6 border-b border-foreground/10 pb-6">
-                  <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Main Title</label>
-                  <input 
-                    type="text" 
-                    value={settings.WHY_CHOOSE_TITLE || ''}
-                    onChange={(e) => handleSettingChange('WHY_CHOOSE_TITLE', e.target.value)}
-                    className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Feature 1 */}
-                  <div className="space-y-4">
-                    <h4 className="font-bold text-sm text-gold">Feature 1</h4>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Title</label>
-                      <input 
-                        type="text" 
-                        value={settings.WHY_CHOOSE_F1_TITLE || ''}
-                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F1_TITLE', e.target.value)}
-                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                      />
+                  
+                  <div className="space-y-4 pt-4 border-t border-foreground/10">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Selected Products (Max 12)</label>
+                      <span className="text-xs font-bold text-foreground/70">
+                        {settings.FEATURED_PRODUCT_IDS ? settings.FEATURED_PRODUCT_IDS.split(',').filter(Boolean).length : 0} / 12
+                      </span>
                     </div>
+                    
+                    {/* List of selected products */}
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
-                      <textarea 
-                        value={settings.WHY_CHOOSE_F1_DESC || ''}
-                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F1_DESC', e.target.value)}
-                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
-                      />
+                      {(settings.FEATURED_PRODUCT_IDS ? settings.FEATURED_PRODUCT_IDS.split(',').filter(Boolean) : []).map((idStr, index, arr) => {
+                        const prodId = parseInt(idStr);
+                        const product = allProducts.find(p => p.id === prodId);
+                        
+                        return (
+                          <div key={`${prodId}-${index}`} className="flex items-center justify-between p-3 bg-background border border-foreground/10 rounded-lg">
+                            <span className="text-sm font-medium">{product ? product.name : `Product ID: ${prodId}`}</span>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => {
+                                  if (index > 0) {
+                                    const newArr = [...arr];
+                                    [newArr[index - 1], newArr[index]] = [newArr[index], newArr[index - 1]];
+                                    handleSettingChange('FEATURED_PRODUCT_IDS', newArr.join(','));
+                                  }
+                                }}
+                                disabled={index === 0}
+                                className="p-1 hover:bg-foreground/5 rounded text-foreground/50 disabled:opacity-30"
+                              >
+                                ↑
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  if (index < arr.length - 1) {
+                                    const newArr = [...arr];
+                                    [newArr[index + 1], newArr[index]] = [newArr[index], newArr[index + 1]];
+                                    handleSettingChange('FEATURED_PRODUCT_IDS', newArr.join(','));
+                                  }
+                                }}
+                                disabled={index === arr.length - 1}
+                                className="p-1 hover:bg-foreground/5 rounded text-foreground/50 disabled:opacity-30"
+                              >
+                                ↓
+                              </button>
+                              <button 
+                                onClick={() => {
+                                  const newArr = arr.filter((_, i) => i !== index);
+                                  handleSettingChange('FEATURED_PRODUCT_IDS', newArr.join(','));
+                                }}
+                                className="p-1 hover:bg-red-500/10 hover:text-red-500 rounded text-foreground/50 ml-2"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
 
-                  {/* Feature 2 */}
-                  <div className="space-y-4">
-                    <h4 className="font-bold text-sm text-gold">Feature 2</h4>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Title</label>
-                      <input 
-                        type="text" 
-                        value={settings.WHY_CHOOSE_F2_TITLE || ''}
-                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F2_TITLE', e.target.value)}
-                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
-                      <textarea 
-                        value={settings.WHY_CHOOSE_F2_DESC || ''}
-                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F2_DESC', e.target.value)}
-                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
-                      />
-                    </div>
-                  </div>
-
-                  {/* Feature 3 */}
-                  <div className="space-y-4">
-                    <h4 className="font-bold text-sm text-gold">Feature 3</h4>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Title</label>
-                      <input 
-                        type="text" 
-                        value={settings.WHY_CHOOSE_F3_TITLE || ''}
-                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F3_TITLE', e.target.value)}
-                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
-                      <textarea 
-                        value={settings.WHY_CHOOSE_F3_DESC || ''}
-                        onChange={(e) => handleSettingChange('WHY_CHOOSE_F3_DESC', e.target.value)}
-                        className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm h-24" 
-                      />
+                    {/* Add new product dropdown */}
+                    <div className="flex gap-2 mt-4">
+                      <select 
+                        id="new_featured_product"
+                        className="flex-1 bg-background text-foreground border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm"
+                      >
+                        <option className="bg-background text-foreground" value="">-- Select a product to add --</option>
+                        {allProducts.map(p => (
+                          <option className="bg-background text-foreground" key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                        {allProducts.length === 0 && (
+                          <option className="bg-background text-foreground" disabled>No active products found</option>
+                        )}
+                      </select>
+                      <button 
+                        onClick={() => {
+                          const select = document.getElementById('new_featured_product') as HTMLSelectElement;
+                          const val = select.value;
+                          if (val) {
+                            const currentIds = settings.FEATURED_PRODUCT_IDS ? settings.FEATURED_PRODUCT_IDS.split(',').filter(Boolean) : [];
+                            if (currentIds.length >= 12) {
+                              error("Maximum 12 products allowed.");
+                              return;
+                            }
+                            if (!currentIds.includes(val)) {
+                              handleSettingChange('FEATURED_PRODUCT_IDS', [...currentIds, val].join(','));
+                              select.value = '';
+                            } else {
+                              error("Product is already in the list.");
+                            }
+                          }
+                        }}
+                        className="bg-foreground/5 hover:bg-foreground/10 px-4 py-2 rounded-lg text-sm font-bold transition-colors"
+                      >
+                        Add
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -437,36 +402,6 @@ export default function HomepageCMS() {
               ) : (
                 <div className="text-center p-12 border border-dashed border-foreground/20 rounded-xl text-foreground/50 font-medium">
                   No active banners found.
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Tab Content: TESTIMONIALS (READ-ONLY DISPLAY) */}
-          {activeTab === 'testimonials' && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center bg-foreground/[0.02] border border-foreground/10 rounded-xl p-6">
-                <div>
-                  <h3 className="text-lg font-bold">Customer Testimonials</h3>
-                  <p className="text-sm text-foreground/60">Testimonials managed globally.</p>
-                </div>
-              </div>
-
-              {testimonials.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {testimonials.map(t => (
-                    <div key={t.id} className="p-4 border border-foreground/10 rounded-lg bg-foreground/[0.02]">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-bold">{t.customer_name}</span>
-                        <span className="text-gold font-bold">★ {t.rating}/5</span>
-                      </div>
-                      <p className="text-sm text-foreground/70 italic">"{t.content}"</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center p-12 border border-dashed border-foreground/20 rounded-xl text-foreground/50 font-medium">
-                  No testimonials found.
                 </div>
               )}
             </div>

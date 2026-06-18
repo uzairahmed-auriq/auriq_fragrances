@@ -51,7 +51,6 @@ export default function AdminLayout({
 
     { type: 'header', name: 'CONTENT MANAGEMENT' },
     { type: 'link', name: "Homepage CMS", href: "/admin/homepage", icon: Store },
-    { type: 'link', name: "Our Story CMS", href: "/admin/our-story", icon: Store },
     { type: 'link', name: "Contact CMS", href: "/admin/contact", icon: Mail },
     { type: 'link', name: "Footer CMS", href: "/admin/footer", icon: Settings },
     { type: 'link', name: "Media Library", href: "/admin/media", icon: Image },

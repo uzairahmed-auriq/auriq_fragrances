@@ -29,7 +29,7 @@ export default function AdminProducts() {
         setProducts(res.data);
       }
     } catch (err: any) {
-      console.error(err);
+      console.warn("Network or API Error:", err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

@@ -11,7 +11,7 @@ export const publicSettingsService = {
       if (!data.success) throw new Error(data.message);
       return data.data; // Record<string, string>
     } catch (error) {
-      console.error("Failed to fetch public settings:", error);
+      console.warn("Failed to fetch public settings:", error instanceof Error ? error.message : String(error));
       return {};
     }
   }
