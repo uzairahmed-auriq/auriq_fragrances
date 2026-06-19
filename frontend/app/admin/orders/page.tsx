@@ -151,7 +151,7 @@ export default function AdminOrders() {
                         </span>
                       </td>
                       <td className="p-4 text-foreground/80 font-medium">{order.items?.length || 0}</td>
-                      <td className="p-4 font-semibold text-foreground text-right">Rs. {Number(order.total_amount).toLocaleString()}</td>
+                      <td className="p-4 font-semibold text-foreground text-right">Rs. {Number(order.total).toLocaleString()}</td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
