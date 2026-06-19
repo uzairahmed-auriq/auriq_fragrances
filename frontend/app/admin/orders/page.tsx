@@ -12,6 +12,16 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = !search || order.id.toString().includes(search) || (order.user?.name || order.user?.email || order.guest_email || "").toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = !statusFilter || order.status === statusFilter;
+    const matchesDate = !dateFilter || new Date(order.created_at).toISOString().slice(0, 10) === dateFilter;
+    return matchesSearch && matchesStatus && matchesDate;
+  });
 
   const fetchOrders = async () => {
     try {
@@ -78,18 +88,22 @@ export default function AdminOrders() {
         <div className="relative w-full md:max-w-xs">
           <input 
             type="text" 
-            placeholder="Search by order ID or customer..." 
+            placeholder="Search by order ID or customer..." value={search} onChange={(e) => setSearch(e.target.value)} 
             className="w-full bg-foreground/[0.02] border border-foreground/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-gold transition-colors text-sm font-medium"
           />
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
         </div>
         <div className="flex items-center gap-4 w-full md:w-auto">
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 border border-foreground/10 bg-foreground/[0.02] px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:border-gold transition-colors text-foreground/80">
-            <Filter className="w-4 h-4" /> Date
-          </button>
-          <button className="flex-1 md:flex-none flex items-center justify-center gap-2 border border-foreground/10 bg-foreground/[0.02] px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:border-gold transition-colors text-foreground/80">
-            <Filter className="w-4 h-4" /> Status
-          </button>
+          <input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="flex-1 md:flex-none border border-foreground/10 bg-foreground/[0.02] px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:border-gold transition-colors text-foreground/80 focus:outline-none focus:border-gold" />
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="flex-1 md:flex-none border border-foreground/10 bg-foreground/[0.02] px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:border-gold transition-colors text-foreground/80 focus:outline-none focus:border-gold bg-background">
+            <option value="">All Status</option>
+            <option value="PENDING">Pending</option>
+            <option value="CONFIRMED">Confirmed</option>
+            <option value="PROCESSING">Processing</option>
+            <option value="SHIPPED">Shipped</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="CANCELLED">Cancelled</option>
+          </select>
         </div>
       </div>
 
@@ -123,7 +137,7 @@ export default function AdminOrders() {
                       No orders found.
                     </td>
                   </tr>
-                ) : orders.map((order) => {
+                ) : filteredOrders.map((order) => {
                   const statusFormatted = order.status.charAt(0).toUpperCase() + order.status.slice(1);
                   return (
                     <tr key={order.id} className="border-b border-foreground/5 hover:bg-foreground/[0.02] transition-colors text-sm group">
