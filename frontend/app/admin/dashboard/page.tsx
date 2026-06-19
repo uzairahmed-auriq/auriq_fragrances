@@ -28,7 +28,7 @@ export default function AdminDashboard() {
   ];
 
   const recentOrders: any[] = data.recentOrders?.map((order: any) => ({
-    id: `AUR-${order.id?.toString().substring(0, 5)}`,
+    id: `AUR-${order.id}`,
     customer: order.user?.name || 'Guest',
     date: new Date(order.created_at).toLocaleDateString(),
     total: `Rs. ${order.total?.toLocaleString() || '0'}`,
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-foreground tracking-wide">Fulfill Orders</span>
-                <span className="text-xs text-foreground/60 font-medium">4 orders pending</span>
+                <span className="text-xs text-foreground/60 font-medium">{data.pendingOrders || 0} orders pending</span>
               </div>
             </Link>
           </div>
