@@ -561,7 +561,9 @@ model NewsletterSubscriber {
 model ShippingConfig {
   id                    Int     @id @default(autoincrement())
   flat_fee              Decimal @db.Decimal(10, 2)
-  free_shipping_above   Decimal @db.Decimal(10, 2)  // e.g. 5000 PKR
+  free_shipping_above   Decimal @db.Decimal(10, 2)
+  karachi_fee           Decimal @db.Decimal(10, 2) @default(200)
+  city_to_city_fee      Decimal @db.Decimal(10, 2) @default(500)
   updated_at            DateTime @updatedAt
 
   @@map("shipping_config")

@@ -21,7 +21,7 @@ router.post('/login', adminLogin);
 // Protected Admin Routes
 router.use(verifyAdmin);
 
-import { getAnalytics } from '../controllers/adminAnalyticsController';
+import { getAnalytics, getNotifications } from '../controllers/adminAnalyticsController';
 import { getInventory } from '../controllers/adminInventoryController';
 import { getAllReviews, updateReviewStatus } from '../controllers/adminReviewController';
 import { getMessages, updateMessageStatus, deleteMessage } from '../controllers/adminMessageController';
@@ -36,6 +36,7 @@ router.put('/profile/password', updatePassword);
 router.delete('/profile/sessions', logoutOtherDevices);
 
 router.get('/dashboard', getDashboardStats);
+router.get('/notifications', getNotifications);
 router.get('/analytics', getAnalytics);
 router.get('/inventory', getInventory);
 
@@ -94,5 +95,9 @@ router.get('/export/subscribers', exportSubscribersCSV);
 // Story (CMS)
 
 router.put('/story', upload.fields([{ name: 'image1', maxCount: 1 }, { name: 'image2', maxCount: 1 }]), updateStory);
+
+import { getAdminShippingConfig, updateShippingConfig } from "../controllers/miscController";
+router.get("/shipping", getAdminShippingConfig);
+router.put("/shipping", updateShippingConfig);
 
 export default router;

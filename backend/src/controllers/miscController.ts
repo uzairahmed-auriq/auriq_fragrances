@@ -108,3 +108,43 @@ export const getPublicSettings = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 }
+export const getAdminShippingConfig = async (req: Request, res: Response) => {
+  try {
+    const config = await prisma.shippingConfig.findFirst();
+    res.json({ success: true, data: config || { flat_fee: 250, free_shipping_above: 5000, karachi_fee: 200, city_to_city_fee: 500 } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const updateShippingConfig = async (req: Request, res: Response) => {
+  try {
+    const { karachi_fee, city_to_city_fee, free_shipping_above } = req.body;
+    const existing = await prisma.shippingConfig.findFirst();
+    let config;
+    if (existing) {
+      config = await prisma.shippingConfig.update({
+        where: { id: existing.id },
+        data: {
+          ...(karachi_fee !== undefined && { karachi_fee: Number(karachi_fee) }),
+          ...(city_to_city_fee !== undefined && { city_to_city_fee: Number(city_to_city_fee) }),
+          ...(free_shipping_above !== undefined && { free_shipping_above: Number(free_shipping_above) }),
+          flat_fee: Number(city_to_city_fee) || existing.flat_fee
+        }
+      });
+    } else {
+      config = await prisma.shippingConfig.create({
+        data: {
+          flat_fee: Number(city_to_city_fee) || 500,
+          free_shipping_above: Number(free_shipping_above) || 5000,
+          karachi_fee: Number(karachi_fee) || 200,
+          city_to_city_fee: Number(city_to_city_fee) || 500
+        }
+      });
+    }
+    res.json({ success: true, data: config });
+  } catch (error) {
+    console.error('UPDATE SHIPPING ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

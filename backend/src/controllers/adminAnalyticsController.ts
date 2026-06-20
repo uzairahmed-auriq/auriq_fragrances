@@ -121,3 +121,58 @@ export const getAnalytics = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Server error: ' + (error instanceof Error ? error.message : String(error)) });
   }
 };
+
+export const getNotifications = async (req: Request, res: Response) => {
+  try {
+    const [pendingOrders, unreadMessages, lowStockVariants] = await Promise.all([
+      prisma.order.count({ where: { status: 'PENDING' } }),
+      prisma.contactMessage.count({ where: { is_read: false } }),
+      prisma.productVariant.findMany({
+        where: {
+          is_active: true,
+        },
+        select: {
+          id: true,
+          stock_quantity: true,
+          low_stock_alert: true,
+          sku: true,
+          product: { select: { name: true } }
+        }
+      })
+    ]);
+
+    const lowStockItems = lowStockVariants.filter(v => v.stock_quantity <= v.low_stock_alert);
+
+    const notifications = [
+      ...(pendingOrders > 0 ? [{
+        id: 'pending-orders',
+        type: 'order',
+        message: `${pendingOrders} order${pendingOrders > 1 ? 's' : ''} pending fulfillment`,
+        link: '/admin/orders'
+      }] : []),
+      ...(unreadMessages > 0 ? [{
+        id: 'unread-messages',
+        type: 'message',
+        message: `${unreadMessages} unread message${unreadMessages > 1 ? 's' : ''}`,
+        link: '/admin/messages'
+      }] : []),
+      ...lowStockItems.slice(0, 5).map(v => ({
+        id: `low-stock-${v.id}`,
+        type: 'stock',
+        message: `${v.product.name} (${v.sku}) is low on stock (${v.stock_quantity} left)`,
+        link: '/admin/inventory'
+      }))
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        count: notifications.length,
+        notifications
+      }
+    });
+  } catch (error) {
+    console.error('GET NOTIFICATIONS ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};

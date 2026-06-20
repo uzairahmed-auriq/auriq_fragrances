@@ -113,7 +113,10 @@ export const createOrder = async (req: UserAuthRequest, res: Response): Promise<
         appliedDiscountCodeId = discount.id;
       }
 
-      const shippingFee = subtotal >= Number(shippingConfig.free_shipping_above) ? 0 : Number(shippingConfig.flat_fee);
+      const city = (shippingAddress.city || "").toLowerCase();
+      const isKarachi = city.includes("karachi");
+      const zoneFee = isKarachi ? Number((shippingConfig as any).karachi_fee || 200) : Number((shippingConfig as any).city_to_city_fee || 500);
+      const shippingFee = subtotal >= Number(shippingConfig.free_shipping_above) ? 0 : zoneFee;
       const total = subtotal + shippingFee - discountAmount;
 
       // Create Order

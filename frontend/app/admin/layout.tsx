@@ -129,16 +129,7 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col h-screen overflow-hidden bg-foreground/[0.02]">
         {/* Top Header */}
         <header className="h-20 border-b border-foreground/10 bg-background/50 backdrop-blur-xl flex items-center justify-between px-8 z-10">
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative w-full max-w-md hidden md:block">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full bg-transparent border border-foreground/20 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:border-gold transition-colors text-sm font-medium"
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/50" />
-            </div>
-          </div>
+          <div className="flex items-center gap-4 flex-1"></div>
           <div className="flex items-center gap-6 relative">
             <Link href="/admin/messages" className="text-foreground/60 hover:text-gold transition-colors relative">
               <Bell className="w-5 h-5" />
