@@ -106,13 +106,13 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
     <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-xl font-serif text-gradient-gold font-bold tracking-widest">Filters</h3>
-        <button onClick={() => { setPriceFilters([]); setFamilyFilters([]); setGenderFilters([]); setBrandFilters([]); }} className="text-[10px] text-foreground/50 hover:text-foreground uppercase tracking-[0.2em] transition-colors">Clear All</button>
+        <button onClick={() => { setPriceFilters([]); setGenderFilters([]); }} className="text-[10px] text-foreground/50 hover:text-foreground uppercase tracking-[0.2em] transition-colors">Clear All</button>
       </div>
 
       {/* Price Filter */}
       <div className="border-t border-foreground/10 pt-6">
-        <button 
-          className="flex w-full items-center justify-between text-foreground hover:text-gold transition-colors" 
+        <button
+          className="flex w-full items-center justify-between text-foreground hover:text-gold transition-colors"
           onClick={() => toggleFilter('price')}
         >
           <span className="text-xs tracking-[0.2em] uppercase font-bold">Price</span>
@@ -130,31 +130,10 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
         </div>
       </div>
 
-      {/* Fragrance Family */}
+      {/* Gender Filter */}
       <div className="border-t border-foreground/10 pt-6">
-        <button 
-          className="flex w-full items-center justify-between text-foreground hover:text-gold transition-colors" 
-          onClick={() => toggleFilter('family')}
-        >
-          <span className="text-xs tracking-[0.2em] uppercase font-bold">Fragrance Family</span>
-          {expandedFilters.family ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        <div className={`overflow-hidden transition-all duration-300 ${expandedFilters.family ? 'max-h-64 mt-5' : 'max-h-0'}`}>
-          <div className="flex flex-col gap-4">
-            {['Woody', 'Fresh', 'Oriental', 'Floral', 'Leather', 'Citrus'].map(label => (
-              <label key={label} className="flex items-center gap-4 cursor-pointer group">
-                <input type="checkbox" checked={familyFilters.includes(label)} onChange={() => toggleArrayFilter(familyFilters, setFamilyFilters, label)} className="accent-[#d4af37] w-4 h-4 bg-transparent border-foreground/30 cursor-pointer" />
-                <span className="text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide font-semibold">{label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Gender */}
-      <div className="border-t border-foreground/10 pt-6">
-        <button 
-          className="flex w-full items-center justify-between text-foreground hover:text-gold transition-colors" 
+        <button
+          className="flex w-full items-center justify-between text-foreground hover:text-gold transition-colors"
           onClick={() => toggleFilter('gender')}
         >
           <span className="text-xs tracking-[0.2em] uppercase font-bold">Gender</span>
@@ -165,53 +144,12 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
             {['Men', 'Women', 'Unisex'].map(label => {
               const genderValue = label === 'Men' ? 'MALE' : label === 'Women' ? 'FEMALE' : 'UNISEX';
               return (
-              <label key={label} className="flex items-center gap-4 cursor-pointer group">
-                <input type="checkbox" checked={genderFilters.includes(genderValue)} onChange={() => toggleArrayFilter(genderFilters, setGenderFilters, genderValue)} className="accent-[#d4af37] w-4 h-4 bg-transparent border-foreground/30 cursor-pointer" />
-                <span className="text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide font-semibold">{label}</span>
-              </label>
-            )})}
-          </div>
-        </div>
-      </div>
-
-      {/* Occasions */}
-      <div className="border-t border-foreground/10 pt-6">
-        <button 
-          className="flex w-full items-center justify-between text-foreground hover:text-gold transition-colors" 
-          onClick={() => toggleFilter('occasion')}
-        >
-          <span className="text-xs tracking-[0.2em] uppercase font-bold">Occasion</span>
-          {expandedFilters.occasion ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        <div className={`overflow-hidden transition-all duration-300 ${expandedFilters.occasion ? 'max-h-48 mt-5' : 'max-h-0'}`}>
-          <div className="flex flex-col gap-4">
-            {['Everyday', 'Evening', 'Office', 'Date Night', 'Special Event'].map(label => (
-              <label key={label} className="flex items-center gap-4 cursor-pointer group">
-                <input type="checkbox" className="accent-[#d4af37] w-4 h-4 bg-transparent border-foreground/30 cursor-pointer" />
-                <span className="text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide font-semibold">{label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Brands */}
-      <div className="border-t border-foreground/10 pt-6">
-        <button 
-          className="flex w-full items-center justify-between text-foreground hover:text-gold transition-colors" 
-          onClick={() => toggleFilter('brand')}
-        >
-          <span className="text-xs tracking-[0.2em] uppercase font-bold">Brand</span>
-          {expandedFilters.brand ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        <div className={`overflow-hidden transition-all duration-300 ${expandedFilters.brand ? 'max-h-32 mt-5' : 'max-h-0'}`}>
-          <div className="flex flex-col gap-4">
-            {['Auriq'].map(label => (
-              <label key={label} className="flex items-center gap-4 cursor-pointer group">
-                <input type="checkbox" checked={brandFilters.includes(label)} onChange={() => toggleArrayFilter(brandFilters, setBrandFilters, label)} className="accent-[#d4af37] w-4 h-4 bg-transparent border-foreground/30 cursor-pointer" />
-                <span className="text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide font-semibold">{label}</span>
-              </label>
-            ))}
+                <label key={label} className="flex items-center gap-4 cursor-pointer group">
+                  <input type="checkbox" checked={genderFilters.includes(genderValue)} onChange={() => toggleArrayFilter(genderFilters, setGenderFilters, genderValue)} className="accent-[#d4af37] w-4 h-4 bg-transparent border-foreground/30 cursor-pointer" />
+                  <span className="text-sm text-foreground/60 group-hover:text-foreground transition-colors tracking-wide font-semibold">{label}</span>
+                </label>
+              );
+            })}
           </div>
         </div>
       </div>

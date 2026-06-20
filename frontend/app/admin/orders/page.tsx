@@ -99,7 +99,7 @@ export default function AdminOrders() {
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
             <option value="CONFIRMED">Confirmed</option>
-            <option value="PROCESSING">Processing</option>
+            <option value="WAREHOUSE">Warehouse</option>
             <option value="SHIPPED">Shipped</option>
             <option value="DELIVERED">Delivered</option>
             <option value="CANCELLED">Cancelled</option>
@@ -201,11 +201,12 @@ export default function AdminOrders() {
           <div className="flex flex-col gap-2">
             <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">New Status</label>
             <select name="status" defaultValue={selectedOrder?.status || 'Processing'} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground *:bg-background" required>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Confirmed</option>
+              <option value="WAREHOUSE">Warehouse</option>
+              <option value="SHIPPED">Shipped</option>
+              <option value="DELIVERED">Delivered</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
           </div>
           <button type="submit" disabled={updating} className="w-full bg-gold text-background font-bold uppercase tracking-widest py-3 rounded-lg text-sm mt-4 hover:bg-foreground transition-colors disabled:opacity-50">
