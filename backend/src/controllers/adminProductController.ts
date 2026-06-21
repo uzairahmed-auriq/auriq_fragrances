@@ -180,6 +180,7 @@ export const updateProduct = async (req: Request, res: Response) => {
           await prisma.productVariant.update({
             where: { id: v.id },
             data: {
+              size_ml: v.size_ml,
               price: v.price,
               discount_price: v.discount_price || null,
               stock_quantity: v.stock_quantity,
