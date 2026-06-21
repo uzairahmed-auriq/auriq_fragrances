@@ -140,27 +140,20 @@ export default function AdminProducts() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const price = formData.get("price");
-    const stock = formData.get("stock_quantity");
     const existingVariants = editingProduct.variants || [];
-    const variants = existingVariants.map((v: any, i: number) => ({
-      id: v.id,
-      size_ml: Number((formData.get(`variant_size_${i}`) as string) || v.size_ml || 100),
-      price: Number((formData.get(`variant_price_${i}`) as string) || v.price || 0),
-      stock_quantity: Number((formData.get(`variant_stock_${i}`) as string) || v.stock_quantity || 0),
-      sku: v.sku || `AQ-${Math.floor(Math.random() * 10000)}`
-    }));
-    // fallback single variant
-    const existingVariant = existingVariants[0] || {};
-    const variant = {
-      id: existingVariant?.id,
-      size_ml: Number((formData.get("variant_size_0") as string) || existingVariant?.size_ml || 100),
-      price: Number(price),
-      stock_quantity: Number(stock),
-      sku: existingVariant?.sku || `AQ-${Math.floor(Math.random() * 10000)}`
-    };
-    formData.append("variants_json", JSON.stringify([variant]));
-
+    const variants = existingVariants.map((v: any, i: number) => {
+      const sizeVal = formData.get(`variant_size_${i}`) as string;
+      const priceVal = formData.get(`variant_price_${i}`) as string;
+      const stockVal = formData.get(`variant_stock_${i}`) as string;
+      return {
+        id: v.id,
+        size_ml: sizeVal ? Number(sizeVal) : v.size_ml || 100,
+        price: priceVal ? Number(priceVal) : Number(v.price) || 0,
+        stock_quantity: stockVal ? Number(stockVal) : v.stock_quantity || 0,
+        sku: v.sku || `AQ-${Math.floor(Math.random() * 10000)}`
+      };
+    });
+    formData.append("variants_json", JSON.stringify(variants));
     formData.delete("price");
     formData.delete("stock_quantity");
 

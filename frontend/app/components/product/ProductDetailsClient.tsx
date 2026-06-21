@@ -24,10 +24,9 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     }
   }, [images.length]);
 
-  // Find price from first variant if available, otherwise fallback
-  const firstVariant = product.variants?.[0];
-  const price = firstVariant ? (firstVariant.discount_price || firstVariant.price) : 0;
-  const originalPrice = firstVariant?.price;
+  const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0] || null);
+  const price = selectedVariant ? (selectedVariant.discount_price || selectedVariant.price) : 0;
+  const originalPrice = selectedVariant?.price;
   
   // Format price
   const formatPrice = (amount: number | string) => {
@@ -35,9 +34,9 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   };
 
   const handleAddToCart = async () => {
-    if (firstVariant) {
+    if (selectedVariant) {
       try {
-        await addToCart(firstVariant.id, undefined, quantity);
+        await addToCart(selectedVariant.id, undefined, quantity);
         router.push('/cart');
       } catch (error) {
         console.error('Failed to add to cart', error);
@@ -108,6 +107,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
           <h1 className="text-4xl md:text-5xl font-serif text-foreground font-bold tracking-wide mb-4 drop-shadow-md">{product.name}</h1>
           <div className="flex items-center gap-4 mb-6">
             <p className="text-2xl text-foreground/80 font-medium tracking-wide">{formatPrice(price)}</p>
+            {selectedVariant?.size_ml && <span className="text-xs font-bold tracking-widest uppercase text-foreground/40 border border-foreground/20 px-3 py-1 rounded-full">{selectedVariant.size_ml}ml</span>}
             {originalPrice && originalPrice !== price && (
               <p className="text-lg text-foreground/40 line-through tracking-wide">{formatPrice(originalPrice)}</p>
             )}
@@ -116,6 +116,30 @@ export default function ProductDetailsClient({ product }: { product: any }) {
             {product.description}
           </p>
         </div>
+
+        {/* Size Selector */}
+        {product.variants && product.variants.length > 1 && (
+          <div className="mb-8">
+            <span className="text-xs font-bold tracking-[0.3em] uppercase text-foreground/50 mb-4 block">Select Size</span>
+            <div className="flex flex-wrap gap-3">
+              {product.variants.map((variant: any) => (
+                <button
+                  key={variant.id}
+                  onClick={() => setSelectedVariant(variant)}
+                  className={`px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase border transition-all ${
+                    selectedVariant?.id === variant.id
+                      ? 'border-gold bg-gold/10 text-gold'
+                      : 'border-foreground/20 text-foreground/60 hover:border-gold/50'
+                  } ${!variant.is_active || variant.stock_quantity === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                  disabled={!variant.is_active || variant.stock_quantity === 0}
+                >
+                  {variant.size_ml}ml
+                  {variant.stock_quantity === 0 && <span className="ml-1 text-red-400">(Out)</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quantity & Add to Cart */}
         <div className="flex flex-col gap-6 mb-12">
