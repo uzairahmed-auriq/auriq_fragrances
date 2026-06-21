@@ -21,7 +21,7 @@ router.post('/login', adminLogin);
 // Protected Admin Routes
 router.use(verifyAdmin);
 
-import { getAnalytics, getNotifications } from '../controllers/adminAnalyticsController';
+import { getAnalytics, getNotifications, getAuditLogs } from '../controllers/adminAnalyticsController';
 import { getInventory } from '../controllers/adminInventoryController';
 import { getAllReviews, updateReviewStatus } from '../controllers/adminReviewController';
 import { getMessages, updateMessageStatus, deleteMessage } from '../controllers/adminMessageController';
@@ -37,6 +37,7 @@ router.delete('/profile/sessions', logoutOtherDevices);
 
 router.get('/dashboard', getDashboardStats);
 router.get('/notifications', getNotifications);
+router.get('/audit-logs', getAuditLogs);
 router.get('/analytics', getAnalytics);
 router.get('/inventory', getInventory);
 

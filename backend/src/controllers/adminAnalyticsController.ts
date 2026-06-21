@@ -176,3 +176,36 @@ export const getNotifications = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+export const getAuditLogs = async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+
+    const [total, logs] = await Promise.all([
+      prisma.auditLog.count(),
+      prisma.auditLog.findMany({
+        orderBy: { created_at: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+        include: {
+          admin: { select: { first_name: true, last_name: true, email: true } }
+        }
+      })
+    ]);
+
+    res.json({
+      success: true,
+      data: logs,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('GET AUDIT LOGS ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
