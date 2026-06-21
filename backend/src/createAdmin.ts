@@ -21,7 +21,7 @@ async function createAdmin() {
     }
   });
 
-  console.log(`Created admin: ${email} with password: ${password}`);
+  console.log(`Admin account created: ${email}`);
 }
 
 createAdmin()
