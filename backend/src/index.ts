@@ -1,3 +1,18 @@
+import rateLimit from 'express-rate-limit'
+
+// Rate limiters
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // max 10 attempts per 15 min
+  message: { success: false, message: 'Too many attempts, please try again later' }
+})
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { success: false, message: 'Too many requests, please slow down' }
+})
+
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -26,15 +41,15 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // Routes
-app.use('/api/auth', authRoutes)
-app.use('/api/admin', adminRoutes)
+app.use('/api/auth', authLimiter, authRoutes)
+app.use('/api/admin', authLimiter, adminRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/ads', adRoutes)
 app.use('/api/user', userRoutes)
 app.use('/api/wishlist', wishlistRoutes)
 app.use('/api/cart', cartRoutes)
-app.use('/api/orders', orderRoutes)
+app.use('/api/orders', generalLimiter, orderRoutes)
 app.use('/api/reviews', reviewRoutes)
 app.use('/api/story', storyRoutes)
 app.use('/api', miscRoutes)
