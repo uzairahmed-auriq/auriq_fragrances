@@ -2,14 +2,15 @@ import rateLimit from 'express-rate-limit'
 
 // Rate limiters
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // max 10 attempts per 15 min
-  message: { success: false, message: 'Too many attempts, please try again later' }
+  windowMs: 15 * 60 * 1000,
+  max: 20, // 20 login attempts per 15 min
+  message: { success: false, message: 'Too many attempts, please try again later' },
+  skip: (req) => req.path !== '/login' // only limit login endpoints
 })
 
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500, // generous limit for admin panel
   message: { success: false, message: 'Too many requests, please slow down' }
 })
 
