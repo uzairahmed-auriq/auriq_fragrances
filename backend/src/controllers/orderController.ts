@@ -53,15 +53,19 @@ export const createOrder = async (req: UserAuthRequest, res: Response): Promise<
           const itemTotal = price * item.quantity;
           subtotal += itemTotal;
 
-          // Check stock
-          if (item.variant.stock_quantity < item.quantity) {
+          // Check stock atomically — re-read inside transaction and use conditional update
+          const freshVariant = await tx.productVariant.findUnique({
+            where: { id: item.variant.id },
+            select: { stock_quantity: true }
+          });
+          if (!freshVariant || freshVariant.stock_quantity < item.quantity) {
             throw new Error(`Insufficient stock for ${item.variant.product.name}`);
           }
 
-          // Decrement stock
+          // Decrement stock atomically
           await tx.productVariant.update({
             where: { id: item.variant.id },
-            data: { stock_quantity: item.variant.stock_quantity - item.quantity }
+            data: { stock_quantity: { decrement: item.quantity } }
           });
 
           orderItemsData.push({
