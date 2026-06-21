@@ -100,4 +100,7 @@ import { getAdminShippingConfig, updateShippingConfig } from "../controllers/mis
 router.get("/shipping", getAdminShippingConfig);
 router.put("/shipping", updateShippingConfig);
 
+import { getAllCustomers } from "../controllers/adminCustomerController";
+router.get("/customers", getAllCustomers);
+
 export default router;
