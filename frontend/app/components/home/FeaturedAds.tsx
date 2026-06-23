@@ -67,7 +67,7 @@ export default function FeaturedAds({ ads = [], settings = {} }: { ads?: any[], 
               <div>
                 <Link 
                   href={ad.link_url || "/collections"} 
-                  className="inline-block px-6 py-3 bg-transparent border border-foreground/20 text-foreground font-bold tracking-widest hover:border-gold hover:text-gold transition-all uppercase text-[10px] shadow-[0_0_20px_rgba(255,255,255,0.05)] hover:shadow-[0_0_30px_rgba(255,255,255,0.15)] backdrop-blur-sm"
+                  className="lg-btn inline-block px-6 py-3 text-foreground font-bold tracking-widest uppercase text-[10px]"
                 >
                   SHOP NOW
                 </Link>
@@ -77,30 +77,30 @@ export default function FeaturedAds({ ads = [], settings = {} }: { ads?: any[], 
         ))}
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows — Glass circles */}
       <button 
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-background/20 backdrop-blur-md border border-foreground/10 text-foreground opacity-0 group-hover:opacity-100 transition-all hover:bg-gold/20 hover:text-gold hover:border-gold"
+        className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-foreground opacity-0 group-hover:opacity-100 transition-all lg-btn"
         aria-label="Previous Slide"
       >
         <ChevronLeft className="w-6 h-6" />
       </button>
       <button 
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-background/20 backdrop-blur-md border border-foreground/10 text-foreground opacity-0 group-hover:opacity-100 transition-all hover:bg-gold/20 hover:text-gold hover:border-gold"
+        className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full text-foreground opacity-0 group-hover:opacity-100 transition-all lg-btn"
         aria-label="Next Slide"
       >
         <ChevronRight className="w-6 h-6" />
       </button>
 
-      {/* Pagination Dots */}
+      {/* Pagination Dots — Glass pills */}
       <div className="absolute bottom-8 left-1/2 -translate-y-1/2 flex gap-3 z-20 md:left-24 md:-translate-x-0">
         {ads.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              currentSlide === index ? "bg-gold w-8" : "bg-foreground/30 hover:bg-foreground/60"
+            className={`h-2 rounded-full transition-all duration-500 backdrop-blur-sm ${
+              currentSlide === index ? "bg-gold w-8 shadow-[0_0_10px_rgba(212,175,55,0.5)]" : "bg-foreground/30 w-2 hover:bg-foreground/60"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

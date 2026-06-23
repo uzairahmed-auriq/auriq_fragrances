@@ -1,87 +1,114 @@
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
 import Link from "next/link";
+import Image from "next/image";
+import { ArrowRight, Gift } from "lucide-react";
 
 export default function GiftSetsPage() {
+  const sets = [
+    {
+      id: 1,
+      name: "The Signature Trilogy",
+      description: "A curated trio of our most beloved fragrances in 30ml travel sizes. Perfect for discovering your next signature scent.",
+      price: "15,000",
+      image: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=2787&auto=format&fit=crop"
+    },
+    {
+      id: 2,
+      name: "Oud Discovery Collection",
+      description: "Experience the profound depth of our oud blends. Five 10ml vials showcasing the versatility of this precious resin.",
+      price: "12,500",
+      image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop"
+    },
+    {
+      id: 3,
+      name: "The Artisan's Vault",
+      description: "Our ultimate luxury gifting experience. Includes a full-size fragrance, matching body oil, and a solid perfume compact housed in a handcrafted wooden box.",
+      price: "35,000",
+      image: "https://images.unsplash.com/photo-1616401784845-180882ba9ba8?q=80&w=2940&auto=format&fit=crop"
+    }
+  ];
+
   return (
-    <>
-      <Header />
-      <main className="flex-1 w-full bg-[#050505] min-h-screen relative overflow-hidden">
-        {/* Hero Section */}
-        <section className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center mt-10">
-          <h1 className="text-4xl md:text-6xl font-serif text-white tracking-widest uppercase mb-6">
-            Personalized Gift Sets
-          </h1>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed mb-10">
-            Curate the perfect aromatic experience. Our bespoke gift sets are meticulously designed to leave a lasting impression, featuring hand-selected fragrances housed in luxurious, customizable packaging.
-          </p>
-          <div className="w-24 h-[1px] bg-gold mx-auto mb-16"></div>
-        </section>
+    <div className="pt-32 pb-24 relative z-10">
+      
+      <div className="text-center mb-16 md:mb-24 px-4">
+        <span className="text-gold text-xs tracking-[0.3em] uppercase mb-4 block font-bold flex items-center justify-center gap-3">
+          <Gift className="w-4 h-4" /> The Art of Gifting
+        </span>
+        <h1 className="text-4xl md:text-6xl font-serif text-gradient-gold font-bold tracking-widest drop-shadow-md mb-6">Gift Sets</h1>
+        <p className="text-foreground/70 max-w-2xl mx-auto font-medium tracking-wide">
+          Exquisitely packaged collections designed to delight the senses and create unforgettable memories. The perfect present for the fragrance connoisseur in your life.
+        </p>
+      </div>
 
-        {/* Details Section */}
-        <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Visual element */}
-            <div className="relative aspect-[4/5] w-full max-w-md mx-auto lg:max-w-none group overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#1a1a1a] to-[#2a2a2a] border border-white/5 rounded-sm flex items-center justify-center shadow-2xl">
-                    <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gold to-transparent"></div>
-                    {/* Placeholder for gift set image */}
-                    <div className="text-center p-8 relative z-10">
-                        <div className="w-20 h-20 border border-gold/50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_15px_rgba(212,175,55,0.3)]">
-                            <span className="text-gold text-3xl font-serif tracking-widest">A</span>
-                        </div>
-                        <h3 className="text-2xl font-serif text-white tracking-widest uppercase mb-3 drop-shadow-md">Bespoke Collection</h3>
-                        <p className="text-sm text-gray-400 font-light tracking-widest uppercase">Custom Engraving Available</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Content */}
-            <div className="flex flex-col justify-center">
-              <h2 className="text-3xl font-serif text-white mb-6 uppercase tracking-wider">
-                The Art of Gifting
-              </h2>
-              <p className="text-gray-400 mb-6 leading-relaxed">
-                Elevate your gift-giving with Auriq's personalized sets. Whether for a corporate event, a special celebration, or an intimate gesture, our team will work with you to create a unique selection of fragrances that perfectly matches the recipient's tastes.
-              </p>
-              
-              <ul className="space-y-4 mb-10 text-gray-300">
-                <li className="flex items-start">
-                  <span className="text-gold mr-3">✦</span>
-                  <span><strong>Custom Selection:</strong> Choose from our entire library of niche and luxury perfumes.</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-gold mr-3">✦</span>
-                  <span><strong>Personalized Packaging:</strong> Monogramming, custom ribbons, and premium presentation boxes.</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-gold mr-3">✦</span>
-                  <span><strong>Expert Consultation:</strong> Work directly with our fragrance concierges to build the ideal set.</span>
-                </li>
-              </ul>
-
-              <div className="p-8 border border-white/10 bg-white/5 backdrop-blur-sm relative">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-gold to-transparent opacity-50"></div>
-                <h3 className="text-xl font-serif text-white mb-4 text-center">Inquire About Custom Sets</h3>
-                <p className="text-gray-400 text-sm mb-8 text-center leading-relaxed">
-                  Due to the highly customized nature of our gift sets, pricing varies based on your selection and personalization requirements. Please contact our concierge team for a custom quote.
-                </p>
-                <div className="flex justify-center">
-                  <a 
-                    href="https://wa.me/923300383666?text=Hello,%20I%20am%20interested%20in%20a%20personalized%20Auriq%20gift%20set." 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-transparent border border-gold text-gold hover:bg-gold hover:text-black transition-all duration-300 px-8 py-3 tracking-widest text-sm uppercase font-medium"
-                  >
-                    Contact on WhatsApp
-                  </a>
+      <div className="flex flex-col gap-16 md:gap-32 px-4 md:px-8 max-w-7xl mx-auto">
+        {sets.map((set, index) => (
+          <div key={set.id} className={`flex flex-col ${index % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} gap-8 lg:gap-16 items-center group`}>
+            
+            {/* Image Side */}
+            <div className="w-full lg:w-1/2 relative">
+              <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden lux-glass p-2">
+                <div className="relative w-full h-full rounded-xl overflow-hidden bg-background/20">
+                  <Image 
+                    src={set.image} 
+                    alt={set.name}
+                    fill
+                    className="object-cover transition-transform duration-[2s] group-hover:scale-105"
+                  />
                 </div>
               </div>
+              {/* Decorative elements */}
+              <div className="absolute -top-6 -right-6 w-32 h-32 bg-gold/5 rounded-full blur-2xl z-0 pointer-events-none"></div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-gold/5 rounded-full blur-2xl z-0 pointer-events-none"></div>
             </div>
+
+            {/* Content Side */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center">
+              <span className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold mb-4">Limited Edition</span>
+              <h2 className="text-3xl md:text-4xl font-serif text-foreground font-bold tracking-wide mb-6">{set.name}</h2>
+              <p className="text-foreground/70 leading-relaxed font-medium tracking-wide mb-8">
+                {set.description}
+              </p>
+              
+              <div className="flex items-end gap-4 mb-10 border-t border-foreground/10 pt-6">
+                <span className="text-2xl font-bold tracking-wide text-foreground">
+                  Rs. {set.price}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button className="lg-btn-primary px-8 py-4 text-white text-xs font-bold tracking-[0.2em] uppercase flex items-center justify-center gap-3 w-full sm:w-auto">
+                  Add to Cart
+                </button>
+                <Link href="/contact" className="lg-btn px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase text-foreground flex items-center justify-center w-full sm:w-auto">
+                  Inquire
+                </Link>
+              </div>
+            </div>
+
           </div>
-        </section>
-      </main>
-      <Footer />
-    </>
+        ))}
+      </div>
+
+      {/* Custom Gifting Banner */}
+      <div className="mt-32 max-w-5xl mx-auto px-4">
+        <div className="lg-card p-10 md:p-16 text-center relative overflow-hidden group border-gold/20">
+          <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none z-0"></div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 rounded-full blur-3xl group-hover:bg-gold/20 transition-colors duration-700 -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gold/10 rounded-full blur-3xl group-hover:bg-gold/20 transition-colors duration-700 translate-y-1/2 -translate-x-1/2"></div>
+          
+          <div className="relative z-10 flex flex-col items-center">
+            <Gift className="w-10 h-10 text-gold mb-6 drop-shadow-[0_0_10px_rgba(212,175,55,0.5)]" />
+            <h3 className="text-3xl font-serif text-foreground font-bold tracking-wide mb-4">Bespoke Gifting</h3>
+            <p className="text-foreground/80 max-w-lg mb-8 font-medium tracking-wide">
+              Create a personalized gift set tailored to their unique preferences. Our fragrance experts are available to guide you through the selection process.
+            </p>
+            <Link href="/contact" className="lg-btn px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase text-gold border-gold/30 flex items-center gap-3 group-hover:bg-gold group-hover:text-black transition-all duration-500">
+              Contact Concierge <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+    </div>
   );
 }

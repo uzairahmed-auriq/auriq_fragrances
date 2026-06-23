@@ -54,21 +54,21 @@ export default function ContactFeedback() {
             </p>
             <div className="flex flex-col gap-10">
               <div className="flex items-start gap-6 group">
-                <div className="mt-1 text-gold group-hover:text-foreground transition-colors"><Mail className="w-5 h-5" /></div>
+                <div className="mt-1 text-gold group-hover:text-foreground transition-colors duration-300 p-3 rounded-2xl lux-glass-card !transform-none"><Mail className="w-5 h-5" /></div>
                 <div>
                   <h4 className="text-[10px] text-foreground/60 tracking-[0.2em] uppercase mb-2 font-bold">Email</h4>
                   <a href="mailto:uzairahmed@auriqfragnaces.com" className="text-foreground hover:text-gold transition-colors text-sm font-semibold tracking-wide">uzairahmed@auriqfragnaces.com</a>
                 </div>
               </div>
               <div className="flex items-start gap-6 group">
-                <div className="mt-1 text-gold group-hover:text-foreground transition-colors"><Phone className="w-5 h-5" /></div>
+                <div className="mt-1 text-gold group-hover:text-foreground transition-colors duration-300 p-3 rounded-2xl lux-glass-card !transform-none"><Phone className="w-5 h-5" /></div>
                 <div>
                   <h4 className="text-[10px] text-foreground/60 tracking-[0.2em] uppercase mb-2 font-bold">Phone</h4>
                   <a href="tel:+923300383666" className="text-foreground hover:text-gold transition-colors text-sm font-semibold tracking-wide">+92 330 0383666</a>
                 </div>
               </div>
               <div className="flex items-start gap-6 group">
-                <div className="mt-1 text-gold group-hover:text-foreground transition-colors"><MapPin className="w-5 h-5" /></div>
+                <div className="mt-1 text-gold group-hover:text-foreground transition-colors duration-300 p-3 rounded-2xl lux-glass-card !transform-none"><MapPin className="w-5 h-5" /></div>
                 <div>
                   <h4 className="text-[10px] text-foreground/60 tracking-[0.2em] uppercase mb-2 font-bold">Address</h4>
                   <address className="not-italic text-foreground text-sm leading-loose font-semibold tracking-wide">
@@ -92,23 +92,23 @@ export default function ContactFeedback() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="flex flex-col gap-3 group">
                       <label htmlFor="name" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Name</label>
-                      <input type="text" id="name" value={form.name} onChange={handleChange} className="bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-light tracking-wide" placeholder="Your full name" required />
+                      <input type="text" id="name" value={form.name} onChange={handleChange} className="lg-input px-4 py-3 text-sm text-foreground placeholder:text-foreground/20 font-light tracking-wide" placeholder="Your full name" required />
                     </div>
                     <div className="flex flex-col gap-3 group">
                       <label htmlFor="email" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Email</label>
-                      <input type="email" id="email" value={form.email} onChange={handleChange} className="bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-light tracking-wide" placeholder="Your email address" required />
+                      <input type="email" id="email" value={form.email} onChange={handleChange} className="lg-input px-4 py-3 text-sm text-foreground placeholder:text-foreground/20 font-light tracking-wide" placeholder="Your email address" required />
                     </div>
                   </div>
                   <div className="flex flex-col gap-3 group">
                     <label htmlFor="subject" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Subject</label>
-                    <input type="text" id="subject" value={form.subject} onChange={handleChange} className="bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-light tracking-wide" placeholder="How can we help?" required />
+                    <input type="text" id="subject" value={form.subject} onChange={handleChange} className="lg-input px-4 py-3 text-sm text-foreground placeholder:text-foreground/20 font-light tracking-wide" placeholder="How can we help?" required />
                   </div>
                   <div className="flex flex-col gap-3 group">
                     <label htmlFor="message" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Message</label>
-                    <textarea id="message" value={form.message} onChange={handleChange} rows={4} className="bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors resize-none placeholder:text-foreground/20 text-foreground font-light tracking-wide" placeholder="Your message..." required></textarea>
+                    <textarea id="message" value={form.message} onChange={handleChange} rows={4} className="lg-input px-4 py-3 text-sm resize-none text-foreground placeholder:text-foreground/20 font-light tracking-wide" placeholder="Your message..." required></textarea>
                   </div>
                   {error && <p className="text-red-400 text-sm">{error}</p>}
-                  <button type="submit" disabled={isSubmitting} className="mt-6 w-full bg-gold text-background py-4 text-xs font-bold tracking-[0.2em] hover:bg-foreground transition-all duration-300 disabled:opacity-50">
+                  <button type="submit" disabled={isSubmitting} className="mt-6 w-full lg-btn-primary py-4 text-white text-xs font-bold tracking-[0.2em] disabled:opacity-50">
                     {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
                   </button>
                 </form>

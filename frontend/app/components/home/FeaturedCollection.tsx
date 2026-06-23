@@ -1,74 +1,48 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import ProductCardActions from "./ProductCardActions";
-import { publicSettingsService } from "../../services/publicSettingsService";
+import Image from "next/image";
 
-export default function FeaturedCollection({ products = [] }: { products?: any[] }) {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then(setSettings);
-  }, []);
-
-  if (!products || products.length === 0 || settings.FEATURED_ENABLED === 'false') return null;
-
-  const title = settings.FEATURED_TITLE || "Featured Collections";
-  const subtitle = settings.FEATURED_SUBTITLE || "";
+export default function FeaturedCollection() {
+  const collectionLinks = [
+    { name: "Oud Collection", handle: "oud", image: "/placeholder.jpg" },
+    { name: "Floral Collection", handle: "floral", image: "/placeholder.jpg" },
+    { name: "Woody Collection", handle: "woody", image: "/placeholder.jpg" },
+  ];
 
   return (
-    <section className="py-24 bg-perfume-main relative overflow-hidden" id="collection">
-      {/* Noise texture for matte finish */}
-      <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
-      
+    <section className="py-24 bg-perfume-main relative overflow-hidden">
       <div className="container-lux relative z-10">
-        <div className="flex justify-between items-end mb-16 border-b border-foreground/5 pb-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
           <div>
-            <h2 className="text-3xl md:text-5xl font-serif text-gradient-gold font-bold tracking-wide">{title}</h2>
-            {subtitle && (
-              <p className="mt-4 text-sm text-foreground/70 max-w-2xl">{subtitle}</p>
-            )}
+            <span className="text-gold text-xs tracking-[0.3em] uppercase mb-4 block font-bold">Curated Signatures</span>
+            <h2 className="text-3xl md:text-5xl font-serif text-foreground font-bold tracking-wide">Featured Collections</h2>
           </div>
-          <Link href="/collections" className="text-xs tracking-[0.2em] text-foreground hover:text-gold transition-colors pb-1 drop-shadow-md">
-            EXPLORE ALL
+          <Link href="/collections" className="text-xs font-bold tracking-[0.2em] uppercase text-foreground/60 hover:text-gold transition-colors flex items-center gap-2 group">
+            Explore All <span className="group-hover:translate-x-1 transition-transform">→</span>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
-          {products.map((product) => {
-            const price = product.variants?.[0]?.price || 0;
-            const imageUrl = product.images?.[0]?.image_url || "https://images.unsplash.com/photo-1595425970377-c9703cc48a7e?q=80&w=2800&auto=format&fit=crop";
-
-            return (
-              <div key={product.id} className="group relative flex flex-col lux-glass-card p-6">
-                <div className="flex flex-col h-full">
-                  {/* Image Container with elegant hover zoom */}
-                  <Link href={`/products/${product.slug || product.id}`} className="block relative aspect-[4/5] overflow-hidden rounded-xl mb-6 z-10 bg-background shadow-2xl">
-                    <Image
-                      src={imageUrl}
-                      alt={product.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      className="object-cover opacity-90 transition-all duration-700 group-hover:scale-110 group-hover:opacity-100"
-                    />
-                    
-                    <ProductCardActions productId={product.id} />
-                  </Link>
-
-                  {/* Product Info - Minimalist typography */}
-                  <div className="flex flex-col text-center relative z-10 px-4">
-                    <span className="text-[10px] text-gold uppercase tracking-[0.2em] mb-3 font-bold">{product.brand}</span>
-                    <Link href={`/products/${product.slug || product.id}`}>
-                      <h3 className="font-serif text-xl text-foreground mb-2 font-bold drop-shadow-md hover:text-gold transition-colors">{product.name}</h3>
-                    </Link>
-                    <span className="text-foreground/80 text-sm tracking-wide font-medium">Rs. {parseFloat(price).toLocaleString()}</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {collectionLinks.map((collection, index) => (
+            <Link key={index} href={`/collections?collection=${collection.handle}`} className="group relative block aspect-[4/5] overflow-hidden rounded-2xl">
+              <Image 
+                src={collection.image} 
+                alt={collection.name} 
+                fill 
+                className="object-cover transition-transform duration-[2s] group-hover:scale-105"
+              />
+              {/* Glass Overlay on hover */}
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500"></div>
+              
+              <div className="absolute bottom-0 left-0 w-full p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                <div className="lg-card p-6 flex items-center justify-between">
+                  <h3 className="font-serif text-xl md:text-2xl text-foreground font-bold">{collection.name}</h3>
+                  <div className="w-10 h-10 rounded-full bg-gold text-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-4 group-hover:translate-x-0">
+                    →
                   </div>
                 </div>
               </div>
-            );
-          })}
+            </Link>
+          ))}
         </div>
       </div>
     </section>

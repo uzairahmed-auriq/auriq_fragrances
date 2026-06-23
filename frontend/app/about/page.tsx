@@ -1,65 +1,57 @@
+"use client";
+
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-
-export const metadata = {
-  title: "About Us | Auriq Perfumery",
-  description: "Discover the heritage, philosophy, and artistry behind Auriq's luxury fragrances.",
-};
+import { Info } from "lucide-react";
 
 export default function AboutPage() {
   return (
     <>
       <Header />
-      <main className="w-full bg-perfume-main min-h-screen relative overflow-hidden">
-        {/* Background elements */}
+      <main className="flex-1 w-full bg-perfume-main min-h-screen relative overflow-hidden py-24">
+        {/* Background Noise & Overlay */}
         <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none z-0"></div>
-        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-gold/5 blur-[120px] rounded-full mix-blend-screen pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[40vw] h-[40vw] bg-gold/5 blur-[100px] rounded-full mix-blend-screen pointer-events-none"></div>
 
-        <section className="container-lux pt-32 pb-24 relative z-10">
-          <div className="max-w-4xl mx-auto text-center mb-24">
-            <span className="text-gold text-xs font-bold tracking-[0.3em] uppercase mb-4 block animate-in fade-in slide-in-from-bottom-4 duration-700">Our Heritage</span>
-            <h1 className="text-4xl md:text-6xl font-serif text-foreground font-bold tracking-widest mb-8 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-              The Essence of Auriq
-            </h1>
-            <p className="text-foreground/70 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto font-light animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-150">
-              Born from a passion for the world's most exquisite raw materials, Auriq represents the pinnacle of modern luxury perfumery. We believe that a fragrance is more than a scent; it is an invisible garment, a signature of one's identity.
-            </p>
+        <div className="container-lux max-w-4xl relative z-10">
+          <div className="text-center mb-16">
+            <span className="text-gold text-xs tracking-[0.3em] uppercase mb-4 block font-bold">Heritage & Craft</span>
+            <h1 className="text-4xl md:text-5xl font-serif text-foreground font-bold tracking-widest drop-shadow-md">Our Story</h1>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-center mb-32">
-            <div className="lux-glass-card p-2 aspect-[4/5] relative overflow-hidden group">
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent z-10"></div>
-              <img src="https://images.unsplash.com/photo-1615526675159-e248c3021d3f?q=80&w=2787&auto=format&fit=crop" alt="Perfume Ingredients" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-            </div>
-            <div className="flex flex-col gap-6">
-              <h2 className="text-3xl font-serif text-foreground font-bold tracking-widest">Masterfully Crafted</h2>
-              <p className="text-foreground/60 leading-relaxed font-light">
-                Every bottle of Auriq is the culmination of months of meticulous blending. We source only the rarest ingredients: sustainable Oud from Assam, Bergamot from Calabria, and Rose Centifolia from Grasse. 
+          <div className="lg-card p-8 md:p-12 lg:p-16">
+            <div className="prose prose-invert max-w-none text-foreground/80 font-medium tracking-wide text-sm md:text-base leading-loose">
+              
+              <div className="flex items-center gap-4 mb-8 p-6 bg-gold/5 border border-gold/20 rounded-2xl shadow-[inset_0_0_20px_rgba(212,175,55,0.05)]">
+                <div className="w-12 h-12 rounded-full lux-glass flex items-center justify-center shrink-0">
+                  <Info className="w-6 h-6 text-gold" />
+                </div>
+                <p className="text-foreground font-bold tracking-wide m-0">
+                  Auriq Fragrances is a symphony of heritage, art, and the most exquisite ingredients nature has to offer.
+                </p>
+              </div>
+
+              <h2 className="text-2xl font-serif text-foreground font-bold mt-12 mb-6 border-b border-foreground/10 pb-4">The Genesis</h2>
+              <p className="mb-6">
+                Born from a deep-rooted passion for the olfactory arts, Auriq Fragrances was founded on the belief that a scent is the most profound trigger of memory and emotion. We embarked on a journey to revive the ancient traditions of perfumery, blending them seamlessly with contemporary elegance to create fragrances that are both timeless and avant-garde.
               </p>
-              <p className="text-foreground/60 leading-relaxed font-light">
-                Our master perfumers employ centuries-old extraction techniques combined with avant-garde chemistry to compose fragrances that are both timeless and profoundly contemporary.
+
+              <h2 className="text-2xl font-serif text-foreground font-bold mt-12 mb-6 border-b border-foreground/10 pb-4">Our Philosophy</h2>
+              <p className="mb-6">
+                We believe in the art of slow perfumery. Every Auriq fragrance is meticulously crafted over months, sometimes years. We do not mass-produce; we curate. Our master perfumers are artisans who view each composition as a masterpiece, ensuring that every drop resonates with depth, complexity, and character.
+              </p>
+              
+              <h2 className="text-2xl font-serif text-foreground font-bold mt-12 mb-6 border-b border-foreground/10 pb-4">The Ingredients</h2>
+              <p className="mb-6">
+                Our commitment to excellence begins with our ingredients. We traverse the globe to source the rarest and most precious botanical extracts, resins, and absolutes. From the ancient oud forests of Southeast Asia to the sun-drenched citrus groves of the Mediterranean, we select only the finest raw materials, ensuring sustainability and ethical sourcing at every step.
+              </p>
+
+              <h2 className="text-2xl font-serif text-foreground font-bold mt-12 mb-6 border-b border-foreground/10 pb-4">The Experience</h2>
+              <p className="mb-6">
+                An Auriq fragrance is designed to be an intimate experience. It is an invisible garment that drapes elegantly over the skin, evolving beautifully throughout the day. It is our hope that our creations become a part of your personal narrative, evoking confidence, allure, and unforgettable memories.
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-center">
-            <div className="flex flex-col gap-6 order-2 md:order-1">
-              <h2 className="text-3xl font-serif text-foreground font-bold tracking-widest">Our Philosophy</h2>
-              <p className="text-foreground/60 leading-relaxed font-light">
-                True luxury is found in details that others overlook. We do not mass-produce; each batch is limited, ensuring the highest concentration of perfume oils for unprecedented longevity and sillage.
-              </p>
-              <p className="text-foreground/60 leading-relaxed font-light">
-                From our heavy, hand-polished crystal flacons to the magnetic zamac caps, the tactile experience of Auriq is designed to reflect the precious liquid held within.
-              </p>
-            </div>
-            <div className="lux-glass-card p-2 aspect-[4/5] relative overflow-hidden group order-1 md:order-2">
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent z-10"></div>
-              <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop" alt="Auriq Perfume Bottle" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
-            </div>
-          </div>
-
-        </section>
+        </div>
       </main>
       <Footer />
     </>

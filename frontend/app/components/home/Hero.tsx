@@ -56,13 +56,13 @@ export default function Hero({ ads = [], settings = {} }: { ads?: any[], setting
         <div className="flex flex-col sm:flex-row gap-6 mb-16">
           <Link 
             href={cta1Link} 
-            className="px-10 py-4 bg-white/90 backdrop-blur-sm text-black font-medium tracking-wide hover:bg-gold hover:text-black transition-colors duration-300 text-sm shadow-xl uppercase"
+            className="lg-btn-primary px-10 py-4 text-white font-medium tracking-widest text-sm shadow-xl uppercase"
           >
             {cta1Text}
           </Link>
           <Link 
             href="/about" 
-            className="px-10 py-4 border border-white/80 text-white font-medium tracking-wide hover:bg-white hover:text-black transition-colors duration-300 text-sm shadow-xl backdrop-blur-sm uppercase"
+            className="lg-btn px-10 py-4 text-white font-medium tracking-widest text-sm shadow-xl uppercase"
           >
             OUR STORY
           </Link>

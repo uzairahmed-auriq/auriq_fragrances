@@ -1,22 +1,9 @@
-import rateLimit from 'express-rate-limit'
 
-// Rate limiters
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20, // 20 login attempts per 15 min
-  message: { success: false, message: 'Too many attempts, please try again later' },
-  skip: (req) => req.path !== '/login' // only limit login endpoints
-})
-
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500, // generous limit for admin panel
-  message: { success: false, message: 'Too many requests, please slow down' }
-})
 
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import rateLimit from 'express-rate-limit'
 import { errorHandler } from './middleware/errorHandler'
 import { ENV } from './config/env'
 import authRoutes from './routes/authRoutes'
@@ -36,21 +23,55 @@ dotenv.config()
 
 const app = express()
 
-// Middleware
+// ── CORS ─────────────────────────────────────────────────────────────────────
+// Restrict to the configured frontend origin only (not wildcard).
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://auriqfragrances.com',
-    'https://www.auriqfragrances.com',
-  ],
-  credentials: true
+  origin: ENV.FRONTEND_URL,
+  credentials: true,
 }))
+
+// ── Body Parsing ──────────────────────────────────────────────────────────────
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Routes
-app.use('/api/auth', authLimiter, authRoutes)
-app.use('/api/admin', authLimiter, adminRoutes)
+// ── Rate Limiting ─────────────────────────────────────────────────────────────
+// General API limit — protects every endpoint.
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+})
+
+// Auth routes — stricter to prevent credential stuffing / brute force.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts. Please wait 15 minutes and try again.' },
+})
+
+// Admin login — strictest, 5 attempts per 15 minutes.
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many admin login attempts. Please wait 15 minutes.' },
+})
+
+// Apply general limiter to all routes, then per-route overrides below.
+app.use(generalLimiter)
+
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.use('/api/auth/login', authLimiter)
+app.use('/api/auth/register', authLimiter)
+app.use('/api/admin/login', adminLoginLimiter)
+
+app.use('/api/auth', authRoutes)
+app.use('/api/admin', adminRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/ads', adRoutes)

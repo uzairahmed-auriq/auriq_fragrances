@@ -28,7 +28,7 @@ export default function NewsletterForm() {
   if (status === 'success') {
     return (
       <div className="flex flex-col gap-3">
-        <div className="bg-transparent border border-green-700/50 p-3 text-sm flex items-center gap-2 text-green-400">
+        <div className="lg-input p-3 text-sm flex items-center gap-2 text-green-400 !border-green-700/50">
           <Check className="w-4 h-4" />
           {message}
         </div>
@@ -43,17 +43,17 @@ export default function NewsletterForm() {
         placeholder="Enter your email address"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="bg-transparent border border-gray-700 p-3 text-sm focus:outline-none focus:border-gold transition-colors text-white"
+        className="lg-input p-3 text-sm text-white placeholder:text-white/30"
         required
         disabled={status === 'loading'}
       />
       <button
         type="submit"
         disabled={status === 'loading'}
-        className="bg-white text-black py-3 text-sm font-medium hover:bg-gold hover:text-black transition-colors disabled:opacity-70 flex justify-center items-center h-11"
+        className="lg-btn-primary py-3 text-sm text-white font-medium disabled:opacity-70 flex justify-center items-center h-11 tracking-widest"
       >
         {status === 'loading' ? (
-          <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         ) : (
           "SUBSCRIBE"
         )}

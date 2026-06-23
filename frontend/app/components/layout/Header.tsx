@@ -92,7 +92,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-foreground/10 transition-all duration-300">
+    <header className="sticky top-0 z-50 w-full lg-nav transition-all duration-500">
       <AnnouncementBar />
       <div className="container-lux flex items-center justify-between h-20">
         {/* Left: Logo */}
@@ -109,7 +109,7 @@ export default function Header() {
             <input
               type="text"
               placeholder="Search fragrances..."
-              className="w-full bg-transparent border border-foreground/20 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:border-gold transition-colors text-sm"
+              className="w-full lg-search py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-foreground/30"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   const val = (e.target as HTMLInputElement).value.trim();
@@ -117,27 +117,27 @@ export default function Header() {
                 }
               }}
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/60" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
           </div>
         </div>
 
         {/* Right: Nav & Icons */}
         <nav className="flex items-center gap-6 text-sm tracking-wide">
           <div className="hidden lg:flex items-center gap-6 mr-4">
-            <Link href="/collections" className="hover:text-gold transition-colors">All Collections</Link>
-            <Link href="/collections?sort=new-arrivals" className="hover:text-gold transition-colors">New Arrivals</Link>
-            <Link href="/collections?sort=best-sellers" className="hover:text-gold transition-colors">Best Sellers</Link>
-            <Link href="/about" className="hover:text-gold transition-colors">About Us</Link>
+            <Link href="/collections" className="hover:text-gold transition-colors duration-300">All Collections</Link>
+            <Link href="/collections?sort=new-arrivals" className="hover:text-gold transition-colors duration-300">New Arrivals</Link>
+            <Link href="/collections?sort=best-sellers" className="hover:text-gold transition-colors duration-300">Best Sellers</Link>
+            <Link href="/about" className="hover:text-gold transition-colors duration-300">About Us</Link>
           </div>
 
           <div className="flex items-center gap-4">
-            <Link href="/wishlist" aria-label="Wishlist" className="hover:text-gold transition-colors">
+            <Link href="/wishlist" aria-label="Wishlist" className="hover:text-gold transition-colors duration-300 p-2 rounded-full hover:bg-foreground/5">
               <Heart className="w-5 h-5" />
             </Link>
-            <Link href="/cart" aria-label="Cart" className="hover:text-gold transition-colors relative">
+            <Link href="/cart" aria-label="Cart" className="hover:text-gold transition-colors duration-300 relative p-2 rounded-full hover:bg-foreground/5">
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-gold text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                <span className="absolute top-0.5 right-0.5 bg-gold text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(212,175,55,0.5)]">
                   {cartCount}
                 </span>
               )}
@@ -147,33 +147,33 @@ export default function Header() {
                 <button 
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   aria-label="Profile Menu" 
-                  className={`transition-colors flex items-center ${isDropdownOpen ? 'text-gold' : 'hover:text-gold'}`}
+                  className={`transition-colors duration-300 flex items-center p-2 rounded-full hover:bg-foreground/5 ${isDropdownOpen ? 'text-gold' : 'hover:text-gold'}`}
                 >
                   <User className="w-5 h-5" />
                 </button>
               ) : (
-                <Link href="/account" aria-label="Profile" className="hover:text-gold transition-colors flex items-center">
+                <Link href="/account" aria-label="Profile" className="hover:text-gold transition-colors duration-300 flex items-center p-2 rounded-full hover:bg-foreground/5">
                   <User className="w-5 h-5" />
                 </Link>
               )}
 
               {/* Dropdown Menu */}
               {isLoggedIn && isDropdownOpen && (
-                <div className="absolute right-0 top-full mt-6 w-56 lux-glass-card shadow-2xl p-2 flex flex-col gap-1 border border-foreground/10 animate-in fade-in slide-in-from-top-2 duration-200 text-foreground z-50">
+                <div className="absolute right-0 top-full mt-4 w-56 lg-dropdown p-2 flex flex-col gap-1 text-foreground z-50">
                   <div className="px-4 py-3 border-b border-foreground/10 mb-1">
                     <p className="text-[10px] uppercase tracking-widest text-foreground/50 font-bold mb-1">Signed in as</p>
                     <p className="text-sm font-semibold truncate">{user?.name || "Welcome"}</p>
                   </div>
-                  <Link href="/account?tab=profile" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm hover:bg-foreground/5 hover:text-gold transition-colors text-left flex items-center gap-3 rounded">
+                  <Link href="/account?tab=profile" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm hover:bg-foreground/5 hover:text-gold transition-colors text-left flex items-center gap-3 rounded-xl">
                     Edit Profile
                   </Link>
-                  <Link href="/account?tab=addresses" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm hover:bg-foreground/5 hover:text-gold transition-colors text-left flex items-center gap-3 rounded">
+                  <Link href="/account?tab=addresses" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm hover:bg-foreground/5 hover:text-gold transition-colors text-left flex items-center gap-3 rounded-xl">
                     Addresses
                   </Link>
-                  <Link href="/account?tab=orders" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm hover:bg-foreground/5 hover:text-gold transition-colors text-left flex items-center gap-3 rounded">
+                  <Link href="/account?tab=orders" onClick={() => setIsDropdownOpen(false)} className="px-4 py-2.5 text-sm hover:bg-foreground/5 hover:text-gold transition-colors text-left flex items-center gap-3 rounded-xl">
                     Track Orders
                   </Link>
-                  <button onClick={handleLogout} className="px-4 py-2.5 mt-1 border-t border-foreground/10 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left font-bold tracking-wide rounded">
+                  <button onClick={handleLogout} className="px-4 py-2.5 mt-1 border-t border-foreground/10 text-sm text-red-500 hover:bg-red-500/10 transition-colors text-left font-bold tracking-wide rounded-xl">
                     Sign Out
                   </button>
                 </div>
