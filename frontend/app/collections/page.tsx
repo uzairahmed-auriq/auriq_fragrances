@@ -2,8 +2,6 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import { productService } from "../services/productService";
 import CollectionsClient from "./CollectionsClient";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "The Collection | Auriq Fragrances",
@@ -23,12 +21,8 @@ export default async function CollectionsPage() {
   }
 
   return (
-    <>
-      <Header />
-      <Suspense fallback={<div className="min-h-screen bg-perfume-main flex items-center justify-center text-gold">Loading Collection...</div>}>
-        <CollectionsClient initialProducts={products} />
-      </Suspense>
-      <Footer />
-    </>
+    <Suspense fallback={<div className="min-h-screen bg-perfume-main flex items-center justify-center text-gold">Loading Collection...</div>}>
+      <CollectionsClient initialProducts={products} />
+    </Suspense>
   );
 }

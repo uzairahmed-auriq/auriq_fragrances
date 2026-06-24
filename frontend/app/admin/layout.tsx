@@ -1,210 +1,179 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  Settings,
-  Image as ImageIcon,
-  MessageSquare,
-  LogOut,
-  ChevronRight,
-  Menu,
-  X
-} from "lucide-react";
-import { apiFetch } from "../utils/api";
+import { usePathname, useRouter } from "next/navigation";
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Search, Bell, Store, Ticket, Activity, Star, Mail, RefreshCcw, Truck, Image, Shield, Database, PieChart, Gift, Award, FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { adminAuthService } from "./services/adminAuthService";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+import { adminMessageService } from "./services/adminMessageService";
+import { AdminToastProvider } from "./context/AdminToastContext";
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [adminUser, setAdminUser] = useState<{ name: string; email: string } | null>(null);
+  const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('auriqAccessToken');
-        if (!token) {
-          window.location.href = '/admin/login';
-          return;
-        }
-
-        // Verify admin role via profile endpoint
-        const res = await apiFetch('/user/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (res.success && res.data.role === 'ADMIN') {
-          setIsAuthenticated(true);
-          setAdminUser({ name: res.data.name, email: res.data.email });
-        } else {
-          window.location.href = '/admin/login';
-        }
-      } catch (err) {
-        window.location.href = '/admin/login';
-      } finally {
-        setIsChecking(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('auriqRefreshToken');
-      if (refreshToken) {
-        await apiFetch('/auth/logout', {
-          method: 'POST',
-          body: JSON.stringify({ refreshToken }),
-        });
-      }
-    } catch (err) {
-      console.error("Logout error", err);
-    } finally {
-      localStorage.removeItem('auriqAccessToken');
-      localStorage.removeItem('auriqRefreshToken');
-      localStorage.removeItem('auriqUser');
-      window.dispatchEvent(new Event('loginStateChange'));
-      window.location.href = '/admin/login';
+    if (adminAuthService.getToken()) {
+      adminMessageService.getMessages().then(msgs => {
+        setHasUnread(msgs.some((m: any) => !m.is_read));
+      }).catch(() => {});
     }
-  };
+  }, [pathname]);
 
-  if (isChecking) {
-    return (
-      <div className="min-h-screen bg-perfume-main flex items-center justify-center relative">
-        <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none z-0"></div>
-        <div className="w-12 h-12 border-2 border-gold border-t-transparent rounded-full animate-spin relative z-10 shadow-[0_0_20px_rgba(212,175,55,0.3)]"></div>
-      </div>
-    );
-  }
+  type NavItem = { type: 'link'; name: string; href: string; icon: any } | { type: 'header'; name: string };
 
-  if (!isAuthenticated) return null;
+  const navigation: NavItem[] = [
+    { type: 'link', name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    
+    { type: 'header', name: 'STORE OPERATIONS' },
+    { type: 'link', name: "Analytics", href: "/admin/analytics", icon: Activity },
+    { type: 'link', name: "Inventory", href: "/admin/inventory", icon: Package },
+    { type: 'link', name: "Products", href: "/admin/products", icon: Store },
+    { type: 'link', name: "Orders", href: "/admin/orders", icon: ShoppingCart },
+    { type: 'link', name: "Customers", href: "/admin/customers", icon: Users },
+    { type: 'link', name: "Reviews", href: "/admin/reviews", icon: Star },
+    { type: 'link', name: "Messages", href: "/admin/messages", icon: Mail },
+    { type: 'link', name: "Coupons", href: "/admin/discounts", icon: Ticket },
+    { type: 'link', name: "Shipping", href: "/admin/shipping", icon: Truck },
 
-  const navItems = [
-    { name: "Dashboard", href: "/admin/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
-    { name: "Inventory", href: "/admin/inventory", icon: <Package className="w-5 h-5" /> },
-    { name: "Orders", href: "/admin/orders", icon: <ShoppingCart className="w-5 h-5" /> },
-    { name: "Customers", href: "/admin/customers", icon: <Users className="w-5 h-5" /> },
-    { name: "Reviews", href: "/admin/reviews", icon: <MessageSquare className="w-5 h-5" /> },
-    { name: "Banners", href: "/admin/banners", icon: <ImageIcon className="w-5 h-5" /> },
-    { name: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
+    { type: 'header', name: 'MARKETING' },
+    { type: 'link', name: "Banners & Ads", href: "/admin/ads", icon: Image },
+    { type: 'link', name: "Newsletter", href: "/admin/newsletter", icon: Mail },
+    { type: 'link', name: "Rewards", href: "/admin/rewards", icon: Award },
+
+    { type: 'header', name: 'CONTENT MANAGEMENT' },
+    { type: 'link', name: "Homepage CMS", href: "/admin/homepage", icon: Store },
+    { type: 'link', name: "Contact CMS", href: "/admin/contact", icon: Mail },
+    { type: 'link', name: "Media Library", href: "/admin/media", icon: Image },
+
+    { type: 'header', name: 'BUSINESS' },
+    { type: 'link', name: "Audit Logs", href: "/admin/audit-logs", icon: FileText },
+
+    { type: 'header', name: 'SYSTEM' },
+    { type: 'link', name: "General Settings", href: "/admin/settings", icon: Settings },
+    { type: 'link', name: "Security", href: "/admin/security", icon: Shield },
+    { type: 'link', name: "Backup & Export", href: "/admin/backup", icon: Database },
   ];
 
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    if (pathname === '/admin/login') {
+      setIsAuthenticated(true);
+      return;
+    }
+    const token = adminAuthService.getToken();
+    if (!token) {
+      router.push('/admin/login');
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, [pathname, router]);
+
+  if (!isAuthenticated) return <div className="h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div></div>;
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
   return (
-    <div className="min-h-screen bg-perfume-main flex relative overflow-hidden">
-      {/* Background Noise & Overlay */}
-      <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none z-0"></div>
-
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 lg-modal-backdrop z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
+    <AdminToastProvider>
+      <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden">
       {/* Sidebar */}
-      <aside 
-        className={`fixed lg:sticky top-0 left-0 h-screen w-72 lg-sidebar flex flex-col z-50 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
-      >
-        <div className="p-6 border-b border-foreground/10 flex items-center justify-between">
-          <Link href="/admin/dashboard" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full lux-glass flex items-center justify-center p-1 group-hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] transition-all">
-              <Image src="/icon.svg" alt="Auriq Logo" width={32} height={32} className="rounded-full" />
-            </div>
-            <div>
-              <h2 className="text-xl font-serif font-bold tracking-widest text-foreground group-hover:text-gold transition-colors">AURIQ</h2>
-              <span className="text-[8px] uppercase tracking-[0.3em] font-bold text-gold">Admin Portal</span>
-            </div>
-          </Link>
-          <button 
-            onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden text-foreground/50 hover:text-foreground transition-colors p-2 lg-btn !rounded-full"
-          >
-            <X className="w-5 h-5" />
-          </button>
+      <aside className="w-64 border-r border-foreground/10 bg-background/50 backdrop-blur-xl flex flex-col hidden md:flex">
+        <div className="h-20 flex items-center px-8 border-b border-foreground/10">
+          <Link href="/" className="text-xl font-serif font-bold tracking-widest text-gradient-gold">AURIQ ADMIN</Link>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar">
-          <nav className="flex flex-col gap-2">
-            {navItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
+        <nav className="flex-1 overflow-y-auto py-8 px-4 flex flex-col gap-2">
+          {navigation.map((item, index) => {
+            if (item.type === 'header') {
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group
-                    ${isActive 
-                      ? 'bg-gold/15 text-gold border border-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.15)]' 
-                      : 'text-foreground/70 hover:bg-foreground/5 hover:text-foreground border border-transparent'}`}
-                >
-                  <span className={`${isActive ? 'text-gold' : 'text-foreground/50 group-hover:text-foreground'} transition-colors`}>
-                    {item.icon}
-                  </span>
-                  <span className="font-bold tracking-widest text-[10px] uppercase flex-1">{item.name}</span>
-                  {isActive && <ChevronRight className="w-4 h-4 opacity-50" />}
-                </Link>
+                <div key={`header-${index}`} className="px-4 py-1 mt-3 text-[10px] font-bold tracking-[0.2em] uppercase text-foreground/40">
+                  {item.name}
+                </div>
               );
-            })}
-          </nav>
-        </div>
+            }
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold tracking-wide transition-all ${isActive
+                  ? "bg-gold/10 text-gold"
+                  : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+                  }`}
+              >
+                <item.icon className={`w-4 h-4 ${isActive ? "text-gold" : "text-foreground/50"}`} />
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
 
         <div className="p-4 border-t border-foreground/10">
-          <div className="lg-card p-4 flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full lux-glass flex items-center justify-center text-gold bg-gold/10 font-bold text-sm shrink-0">
-              {adminUser?.name.charAt(0) || 'A'}
-            </div>
-            <div className="flex flex-col overflow-hidden">
-              <span className="text-xs font-bold text-foreground truncate">{adminUser?.name || 'Administrator'}</span>
-              <span className="text-[10px] text-foreground/50 truncate tracking-wide">{adminUser?.email}</span>
-            </div>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 lg-btn py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 text-[10px] font-bold tracking-[0.2em] uppercase transition-all"
-          >
-            <LogOut className="w-4 h-4" />
+          <button onClick={() => adminAuthService.logout()} className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold tracking-wide text-red-500/80 hover:bg-red-500/10 hover:text-red-500 transition-all w-full">
+            <LogOut className="w-5 h-5" />
             Sign Out
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen relative z-10 overflow-hidden">
-        
-        {/* Top Navbar */}
-        <header className="h-20 lg-nav border-b border-foreground/10 sticky top-0 z-30 flex items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden text-foreground/70 hover:text-gold transition-colors p-2 lg-btn !rounded-full"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            {/* Breadcrumb based on pathname could go here */}
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Link href="/" target="_blank" className="hidden sm:flex lg-btn px-6 py-2.5 text-[10px] font-bold tracking-[0.2em] uppercase text-foreground/70 hover:text-gold">
-              View Storefront
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-foreground/[0.02]">
+        {/* Top Header */}
+        <header className="h-20 border-b border-foreground/10 bg-background/50 backdrop-blur-xl flex items-center justify-between px-8 z-10">
+          <div className="flex items-center gap-4 flex-1"></div>
+          <div className="flex items-center gap-6 relative">
+            <Link href="/admin/messages" className="text-foreground/60 hover:text-gold transition-colors relative">
+              <Bell className="w-5 h-5" />
+              {hasUnread && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-gold rounded-full"></span>
+              )}
             </Link>
+            
+            <button 
+              onClick={() => {
+                const el = document.getElementById('profile-dropdown');
+                if (el) el.classList.toggle('hidden');
+              }}
+              className="w-8 h-8 rounded-full bg-gold/20 border border-gold/50 flex items-center justify-center text-xs font-bold text-gold hover:bg-gold/30 transition-colors"
+            >
+              A
+            </button>
+
+            {/* Profile Dropdown */}
+            <div id="profile-dropdown" className="hidden absolute right-0 top-full mt-4 w-48 bg-background border border-foreground/10 rounded-xl shadow-2xl py-2 z-50">
+              <Link href="/admin/settings" className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-foreground/70 hover:text-gold hover:bg-foreground/5 transition-colors">
+                <Settings className="w-4 h-4" />
+                Settings
+              </Link>
+              <div className="border-t border-foreground/10 my-1"></div>
+              <button 
+                onClick={() => adminAuthService.logout()} 
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500/80 hover:text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-          {children}
-        </main>
-
-      </div>
+        <div className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-6xl mx-auto">
+            {children}
+          </div>
+        </div>
+      </main>
     </div>
+    </AdminToastProvider>
   );
 }

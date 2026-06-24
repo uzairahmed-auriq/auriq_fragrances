@@ -63,20 +63,18 @@ export default function AnnouncementBar() {
   if (!isLoaded) {
     return (
       <div 
-        className={`w-full h-[40px] transition-all duration-700 ease-in-out overflow-hidden backdrop-blur-xl
+        className={`w-full bg-gold h-[40px] transition-all duration-700 ease-in-out overflow-hidden
           ${isVisible ? 'max-h-[40px] opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}
         `}
-        style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.9), rgba(212,175,55,0.8))' }}
       />
     );
   }
 
   return (
     <div 
-      className={`w-full text-black text-sm font-medium flex items-center justify-center tracking-wide transition-all duration-700 ease-in-out overflow-hidden backdrop-blur-xl
+      className={`w-full bg-gold text-black text-sm font-medium flex items-center justify-center tracking-wide transition-all duration-700 ease-in-out overflow-hidden
         ${isVisible ? 'max-h-[40px] opacity-100 py-2' : 'max-h-0 opacity-0 py-0'}
       `}
-      style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.95), rgba(212,175,55,0.85))', boxShadow: '0 2px 12px rgba(212,175,55,0.2)' }}
     >
       {announcementLink ? (
         <a href={announcementLink} className="hover:underline">

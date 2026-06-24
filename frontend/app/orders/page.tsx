@@ -9,8 +9,6 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { getMyOrders } from "../services/orderService";
 
-// Inner component — allowed to call useSearchParams() because it's
-// always rendered inside a <Suspense> boundary below.
 function OrdersContent() {
   const searchParams = useSearchParams();
   const addedLoyalty = searchParams.get('loyalty') === 'true';
@@ -162,18 +160,7 @@ function OrdersContent() {
 
 export default function OrdersPage() {
   return (
-    <Suspense
-      fallback={
-        <>
-          <Header />
-          <main className="flex-1 w-full bg-perfume-main min-h-screen relative flex items-center justify-center">
-            <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none z-0"></div>
-            <div className="w-12 h-12 border-2 border-gold border-t-transparent rounded-full animate-spin relative z-10 shadow-[0_0_20px_rgba(212,175,55,0.3)]"></div>
-          </main>
-          <Footer />
-        </>
-      }
-    >
+    <Suspense fallback={<div className="min-h-screen bg-perfume-main flex items-center justify-center"><div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div></div>}>
       <OrdersContent />
     </Suspense>
   );

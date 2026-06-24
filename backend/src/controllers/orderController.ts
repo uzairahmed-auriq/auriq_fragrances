@@ -53,17 +53,21 @@ export const createOrder = async (req: UserAuthRequest, res: Response): Promise<
           const itemTotal = price * item.quantity;
           subtotal += itemTotal;
 
-          // Atomically decrement stock only if sufficient quantity exists.
-          // Using updateMany with a WHERE guard is race-condition-safe — the
-          // check and decrement happen in the same DB operation inside the transaction.
-          const updated = await tx.productVariant.updateMany({
-            where: { id: item.variant.id, stock_quantity: { gte: item.quantity } },
+          // Check stock atomically — re-read inside transaction and use conditional update
+          const freshVariant = await tx.productVariant.findUnique({
+            where: { id: item.variant.id },
+            select: { stock_quantity: true }
+          });
+          if (!freshVariant || freshVariant.stock_quantity < item.quantity) {
+            throw new Error(`Insufficient stock for ${item.variant.product.name}`);
+          }
+
+          // Decrement stock atomically
+          await tx.productVariant.update({
+            where: { id: item.variant.id },
             data: { stock_quantity: { decrement: item.quantity } }
           });
 
-          if (updated.count === 0) {
-            throw new Error(`Insufficient stock for ${item.variant.product.name}`);
-          }
           orderItemsData.push({
             variant_id: item.variant.id,
             item_name: item.variant.product.name,

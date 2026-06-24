@@ -1,194 +1,168 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Star, MessageSquare } from "lucide-react";
-import { apiFetch } from "../../utils/api";
+import { Star } from "lucide-react";
+import { reviewService } from "../../services/reviewService";
+
+interface Review {
+  id: number;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  user: { name: string };
+}
 
 export default function ProductReviews({ productId }: { productId: number }) {
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [formOpen, setFormOpen] = useState(false);
-  
-  // Form state
-  const [rating, setRating] = useState(5);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("auriqAccessToken"));
+  }, []);
+
+  const fetchReviews = async () => {
+    try {
+      setIsLoading(true);
+      const data = await reviewService.getProductReviews(productId);
+      setReviews(data.reviews || []);
+      setAverageRating(data.averageRating || 0);
+      setTotalReviews(data.totalReviews || 0);
+    } catch (err) {
+      console.error("Failed to load reviews", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchReviews();
   }, [productId]);
 
-  const fetchReviews = async () => {
-    try {
-      const res = await apiFetch(`/products/${productId}/reviews`);
-      if (res.success) {
-        setReviews(res.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch reviews");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem('auriqAccessToken');
-    
-    if (!token) {
-      setError("Please sign in to leave a review.");
+    if (rating === 0) {
+      setError("Please select a star rating");
       return;
     }
-
-    setIsSubmitting(true);
     setError("");
-
+    setIsSubmitting(true);
     try {
-      const res = await apiFetch(`/products/${productId}/reviews`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ rating, comment })
-      });
-
-      if (res.success) {
-        setSuccess(true);
-        setFormOpen(false);
-        setComment("");
-        setRating(5);
-        fetchReviews(); // Refresh list
-      } else {
-        setError(res.message || "Failed to submit review");
-      }
+      await reviewService.addReview(productId, rating, comment);
+      setSuccess(true);
+      setRating(0);
+      setComment("");
+      fetchReviews();
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      setError(err.message || "Something went wrong.");
+      setError(err.message || "Failed to submit review");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (loading) return null;
-
-  const averageRating = reviews.length > 0 
-    ? (reviews.reduce((acc, rev) => acc + rev.rating, 0) / reviews.length).toFixed(1) 
-    : "0";
-
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-        <div>
-          <h2 className="text-3xl font-serif text-foreground font-bold tracking-wide mb-4">Customer Reviews</h2>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star 
-                  key={star} 
-                  className={`w-5 h-5 ${star <= Number(averageRating) ? "fill-gold text-gold" : "text-foreground/20"}`} 
-                />
-              ))}
-            </div>
-            <span className="text-lg font-bold text-foreground">{averageRating} out of 5</span>
-            <span className="text-sm text-foreground/50 font-medium">({reviews.length} Reviews)</span>
-          </div>
-        </div>
-        
-        <button 
-          onClick={() => setFormOpen(!formOpen)}
-          className="lg-btn px-8 py-4 text-xs font-bold tracking-[0.2em] uppercase"
-        >
-          Write a Review
-        </button>
-      </div>
+    <div className="container-lux py-16 border-t border-foreground/10">
+      <div className="max-w-3xl mx-auto">
+        <h2 className="text-3xl font-serif text-foreground font-bold tracking-wide mb-2">Customer Reviews</h2>
 
-      {formOpen && (
-        <div className="lux-glass-card p-8 mb-12 animate-in fade-in slide-in-from-top-4 duration-500">
-          <h3 className="text-xl font-serif text-foreground font-bold mb-6 border-b border-foreground/10 pb-4">Share Your Experience</h3>
-          
-          {error && <div className="text-red-400 text-sm mb-4 bg-red-400/10 p-3 rounded">{error}</div>}
-          {success && <div className="text-green-400 text-sm mb-4 bg-green-400/10 p-3 rounded">Review submitted successfully! It may take a moment to appear.</div>}
-          
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Overall Rating</label>
-              <div className="flex items-center gap-2 lg-input w-fit p-2 rounded-full">
+        <div className="flex items-center gap-3 mb-10">
+          <div className="flex">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                className={`w-5 h-5 ${star <= Math.round(averageRating) ? "text-gold fill-gold" : "text-foreground/20"}`}
+              />
+            ))}
+          </div>
+          <span className="text-foreground/70 text-sm">
+            {averageRating > 0 ? averageRating.toFixed(1) : "No ratings yet"} ({totalReviews} {totalReviews === 1 ? "review" : "reviews"})
+          </span>
+        </div>
+
+        {/* Review Form */}
+        <div className="lux-glass-card p-6 rounded-xl mb-10">
+          {isLoggedIn ? (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <label className="text-xs font-bold uppercase tracking-[0.2em] text-foreground/60">Write a Review</label>
+              <div className="flex gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
-                    key={star}
                     type="button"
+                    key={star}
                     onClick={() => setRating(star)}
-                    className={`p-1 hover:scale-110 transition-transform ${star <= rating ? "text-gold" : "text-foreground/20"}`}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
                   >
-                    <Star className={`w-6 h-6 ${star <= rating ? "fill-current drop-shadow-[0_0_8px_rgba(212,175,55,0.5)]" : ""}`} />
+                    <Star
+                      className={`w-7 h-7 transition-colors ${
+                        star <= (hoverRating || rating) ? "text-gold fill-gold" : "text-foreground/20"
+                      }`}
+                    />
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="flex flex-col gap-3 group">
-              <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold group-focus-within:text-gold transition-colors">Your Review</label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                required
-                rows={4}
-                placeholder="What did you like or dislike? What is this fragrance best for?"
-                className="lg-input p-4 text-sm resize-none text-foreground placeholder:text-foreground/30 font-medium tracking-wide"
+                placeholder="Share your experience with this fragrance..."
+                rows={3}
+                className="bg-transparent border border-foreground/20 rounded-lg px-4 py-3 text-sm text-foreground focus:border-gold outline-none resize-none"
               />
-            </div>
-
-            <div className="flex justify-end gap-4 mt-2">
-              <button 
-                type="button" 
-                onClick={() => setFormOpen(false)}
-                className="text-xs font-bold tracking-[0.2em] uppercase text-foreground/50 hover:text-foreground transition-colors px-4 py-2"
-              >
-                Cancel
-              </button>
-              <button 
-                type="submit" 
+              {error && <p className="text-red-400 text-sm">{error}</p>}
+              {success && <p className="text-emerald-400 text-sm">Review submitted successfully!</p>}
+              <button
+                type="submit"
                 disabled={isSubmitting}
-                className="lg-btn-primary px-8 py-3 text-white text-xs font-bold tracking-[0.2em] uppercase disabled:opacity-50"
+                className="self-start bg-gold/90 text-background px-6 py-3 rounded-full text-xs font-bold tracking-widest uppercase hover:bg-foreground transition-colors disabled:opacity-50"
               >
                 {isSubmitting ? "Submitting..." : "Submit Review"}
               </button>
-            </div>
-          </form>
+            </form>
+          ) : (
+            <p className="text-foreground/60 text-sm text-center py-2">
+              Please <a href="/account" className="text-gold underline">log in</a> to write a review.
+            </p>
+          )}
         </div>
-      )}
 
-      {/* Reviews List */}
-      <div className="flex flex-col gap-6">
-        {reviews.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center lux-glass-card border-dashed border-foreground/20">
-            <MessageSquare className="w-12 h-12 text-foreground/20 mb-4" />
-            <h3 className="text-xl font-serif text-foreground font-bold mb-2">No reviews yet</h3>
-            <p className="text-foreground/50 text-sm">Be the first to share your thoughts on this masterpiece.</p>
+        {/* Reviews List */}
+        {isLoading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
           </div>
+        ) : reviews.length === 0 ? (
+          <p className="text-foreground/50 text-center py-12">No reviews yet. Be the first to share your thoughts.</p>
         ) : (
-          reviews.map((review) => (
-            <div key={review.id} className="lux-glass-card p-8 border-l-4 border-l-gold/50 bg-foreground/[0.01]">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-1">
+          <div className="flex flex-col gap-6">
+            {reviews.map((r) => (
+              <div key={r.id} className="border-b border-foreground/10 pb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-serif text-foreground font-semibold">{r.user?.name || "Anonymous"}</span>
+                  <span className="text-xs text-foreground/40">{new Date(r.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex mb-2">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star 
-                      key={star} 
-                      className={`w-4 h-4 ${star <= review.rating ? "fill-gold text-gold drop-shadow-[0_0_5px_rgba(212,175,55,0.4)]" : "text-foreground/20"}`} 
+                    <Star
+                      key={star}
+                      className={`w-4 h-4 ${star <= r.rating ? "text-gold fill-gold" : "text-foreground/20"}`}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-foreground/40 font-bold tracking-widest uppercase">
-                  {new Date(review.created_at).toLocaleDateString()}
-                </span>
+                {r.comment && <p className="text-foreground/70 text-sm leading-relaxed">{r.comment}</p>}
               </div>
-              <p className="text-foreground/80 text-sm leading-relaxed font-medium mb-4">{review.comment}</p>
-              <p className="text-[10px] text-foreground/50 uppercase tracking-[0.2em] font-bold border-t border-foreground/10 pt-4">
-                — {review.user?.name || "Verified Customer"}
-              </p>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>

@@ -68,5 +68,31 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  return <ProductDetailsClient product={product} />;
+  return (
+    <>
+      <Header />
+      <main className="flex-1 w-full bg-perfume-main min-h-screen relative overflow-hidden">
+        <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none z-0"></div>
+
+        <div className="relative z-10 container-lux pt-12 pb-6">
+          <Link
+            href="/collections"
+            className="flex items-center gap-2 text-foreground/50 hover:text-gold transition-colors text-xs font-bold tracking-[0.2em] uppercase w-max"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Collection
+          </Link>
+        </div>
+
+        <div className="relative z-10 container-lux pb-24">
+          <ProductDetailsClient product={product} />
+        </div>
+
+        <div className="relative z-10">
+          <ProductReviews productId={product.id} />
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
 }

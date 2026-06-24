@@ -48,11 +48,11 @@ export default function ProductCardActions({ productId, variantId }: { productId
 
   return (
     <>
-      <div className="absolute top-4 right-4 flex flex-col gap-3 opacity-0 transition-all duration-500 group-hover:opacity-100 z-10">
+      <div className="absolute top-4 right-4 flex flex-col gap-3 opacity-0 transition-opacity duration-500 group-hover:opacity-100 z-10">
         <button
           onClick={handleWishlist}
           disabled={wishlistLoading}
-          className={`lg-btn p-3 !rounded-full transition-all shadow-lg ${wishlisted ? 'border-gold text-gold !bg-[rgba(212,175,55,0.15)]' : 'text-foreground hover:text-gold'}`}
+          className={`bg-background/60 backdrop-blur-md border p-3 rounded-full transition-all shadow-lg ${wishlisted ? 'border-gold text-gold bg-gold/10' : 'border-foreground/20 text-foreground hover:bg-gold hover:text-background hover:border-gold'}`}
           aria-label="Add to Wishlist"
         >
           <Heart className={`w-5 h-5 ${wishlisted ? 'fill-gold' : ''}`} />
@@ -62,7 +62,7 @@ export default function ProductCardActions({ productId, variantId }: { productId
       <div className="absolute bottom-0 left-0 w-full opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-10">
         <button
           onClick={handleAddToCart}
-          className="w-full lg-btn-primary py-4 text-white text-sm font-bold tracking-widest flex items-center justify-center gap-2 !rounded-none !rounded-b-[var(--glass-radius)]"
+          className="w-full bg-gold/90 backdrop-blur-md text-background py-4 text-sm font-bold tracking-widest hover:bg-foreground transition-colors flex items-center justify-center gap-2 border-t border-foreground/20"
         >
           {added ? (
             <><Check className="w-5 h-5" /> ADDED</>
