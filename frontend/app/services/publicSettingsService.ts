@@ -5,7 +5,7 @@ export const publicSettingsService = {
     try {
       const url = group ? `${API_URL}/public/settings?group=${group}` : `${API_URL}/public/settings`;
       const res = await fetch(url, {
-        cache: 'no-store'
+        next: { revalidate: 60 }
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);

@@ -1,21 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { publicSettingsService } from "../../services/publicSettingsService";
+import { useSettings } from "../../context/SettingsContext";
 
 export default function AnnouncementBar() {
   const [isVisible, setIsVisible] = useState(true);
-  const [settings, setSettings] = useState<Record<string, string>>({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const settings = useSettings();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    // Fetch CMS settings
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then((data) => {
-      setSettings(data);
-      setIsLoaded(true);
-    });
-  }, []);
+  useEffect(() => { setIsLoaded(true); }, [settings]);
 
   const startTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current);

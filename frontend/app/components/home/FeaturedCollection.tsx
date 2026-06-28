@@ -4,14 +4,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCardActions from "./ProductCardActions";
-import { publicSettingsService } from "../../services/publicSettingsService";
+import { useSettings } from "../../context/SettingsContext";
 
 export default function FeaturedCollection({ products = [] }: { products?: any[] }) {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then(setSettings);
-  }, []);
+  const settings = useSettings();
 
   if (!products || products.length === 0 || settings.FEATURED_ENABLED === 'false') return null;
 
