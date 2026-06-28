@@ -4,10 +4,13 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Heart, ShoppingBag, ShieldCheck, Truck, RefreshCcw } from "lucide-react";
 import { useCart } from "../../context/CartContext";
+import { apiFetch } from "../../utils/api";
 import { useRouter } from "next/navigation";
 
 export default function ProductDetailsClient({ product }: { product: any }) {
   const [quantity, setQuantity] = useState(1);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'notes' | 'details'>('notes');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart } = useCart();
@@ -24,6 +27,18 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     }
   }, [images.length]);
 
+  useEffect(() => {
+  const token = localStorage.getItem('auriqAccessToken');
+  if (!token) return;
+  apiFetch('/wishlist', { headers: { Authorization: `Bearer ${token}` } })
+    .then((res) => {
+      if (res.success && res.data?.items) {
+        const isInWishlist = res.data.items.some((item: any) => item.product_id === product.id);
+        setIsWishlisted(isInWishlist);
+      }
+    })
+    .catch(() => {});
+}, [product.id]);
   const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0] || null);
   const price = selectedVariant ? (selectedVariant.discount_price || selectedVariant.price) : 0;
   const originalPrice = selectedVariant?.price;
@@ -31,6 +46,25 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   // Format price
   const formatPrice = (amount: number | string) => {
     return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(Number(amount)).replace('PKR', 'Rs.');
+  };
+
+  const handleWishlist = async () => {
+    const token = localStorage.getItem('auriqAccessToken');
+    if (!token) { window.location.href = '/account'; return; }
+    setWishlistLoading(true);
+    try {
+      if (isWishlisted) {
+        await apiFetch(`/wishlist/remove/${product.id}`, { method: 'DELETE' });
+        setIsWishlisted(false);
+      } else {
+        await apiFetch('/wishlist/add', { method: 'POST', body: JSON.stringify({ product_id: product.id }) });
+        setIsWishlisted(true);
+      }
+    } catch (err) {
+      console.error('Wishlist error', err);
+    } finally {
+      setWishlistLoading(false);
+    }
   };
 
   const handleAddToCart = async () => {
@@ -166,8 +200,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
               <ShoppingBag className="w-5 h-5" />
               ADD TO CART
             </button>
-            <button className="p-4 border border-foreground/20 rounded-full text-foreground hover:text-gold hover:border-gold transition-colors lux-glass-card">
-              <Heart className="w-6 h-6" />
+            <button onClick={handleWishlist} disabled={wishlistLoading} className={`p-4 border rounded-full transition-colors lux-glass-card disabled:opacity-50 ${isWishlisted ? "border-gold text-gold bg-gold/10" : "border-foreground/20 text-foreground hover:text-gold hover:border-gold"}`}>
+              <Heart className={`w-6 h-6 ${isWishlisted ? "fill-gold" : ""}`} />
             </button>
           </div>
         </div>
