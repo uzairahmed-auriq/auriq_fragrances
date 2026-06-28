@@ -28,7 +28,7 @@ import { getMessages, updateMessageStatus, deleteMessage } from '../controllers/
 import { getSettingsByGroup, updateSettings } from '../controllers/adminSettingsController';
 import { getAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial } from '../controllers/adminTestimonialController';
 import { getProfile, updateProfile, updatePassword, logoutOtherDevices } from '../controllers/adminProfileController';
-import { getSubscribers, deleteSubscriber, exportSubscribersCSV } from '../controllers/adminNewsletterController';
+import { getSubscribers, deleteSubscriber, exportSubscribersCSV, sendCampaign } from '../controllers/adminNewsletterController';
 
 router.get('/profile', getProfile);
 router.put('/profile', upload.single('profile_image'), updateProfile);
@@ -91,6 +91,8 @@ router.delete('/discounts/:id', deleteDiscount);
 // Newsletters
 router.get('/newsletters', getSubscribers);
 router.delete('/newsletters/:id', deleteSubscriber);
+router.get('/newsletters/export', exportSubscribersCSV);
+router.post('/newsletters/campaign', sendCampaign);
 router.get('/export/subscribers', exportSubscribersCSV);
 
 // Story (CMS)

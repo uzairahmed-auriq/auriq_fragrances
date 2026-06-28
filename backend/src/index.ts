@@ -93,4 +93,4 @@ setInterval(async () => {
   } catch (e) {
     console.log('DB keepalive failed:', e);
   }
-}, 4 * 60 * 1000);
+}, 2 * 60 * 1000);
