@@ -8,6 +8,69 @@ const FROM_SUPPORT = 'Auriq Support <support@auriqfragrances.com>';
 const FROM_MARKETING = 'Auriq Fragrances <marketing@auriqfragrances.com>';
 const FROM_BILLING = 'Auriq Fragrances <billing@auriqfragrances.com>';
 
+import nodemailer from 'nodemailer';
+
+// OTP Verification Email
+export const sendOTPEmail = async (email: string, otp: string) => {
+  console.log(`[DEV ONLY] Attempting to send OTP to ${email}: ${otp}`);
+  
+  const htmlContent = `
+    <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#f5f0e8;">
+      <div style="background:#1a1a1a;padding:40px;text-align:center;border-bottom:2px solid #d4af37;">
+        <h1 style="color:#d4af37;font-size:28px;letter-spacing:4px;margin:0;">AURIQ</h1>
+      </div>
+      <div style="padding:40px;text-align:center;">
+        <h2 style="color:#d4af37;font-size:20px;letter-spacing:2px;">VERIFY YOUR EMAIL</h2>
+        <p style="color:#ccc;">Use the code below to verify your email address and complete your registration.</p>
+        <div style="background:#1a1a1a;padding:24px;margin:32px auto;border:1px solid #333;width:fit-content;">
+          <p style="color:#d4af37;font-size:32px;letter-spacing:8px;font-weight:bold;margin:0;">${otp}</p>
+        </div>
+        <p style="color:#888;font-size:12px;">If you didn't request this code, you can safely ignore this email.</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const { data, error } = await resend.emails.send({
+      from: FROM_SUPPORT,
+      to: email,
+      subject: 'Your Auriq Verification Code',
+      html: htmlContent
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+  } catch (error: any) {
+    console.error('RESEND OTP ERROR:', error.message || error);
+    console.log('Falling back to Nodemailer (Ethereal) for development testing...');
+    
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      const transporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+
+      const info = await transporter.sendMail({
+        from: '"Auriq Support" <support@auriqfragrances.com>',
+        to: email,
+        subject: 'Your Auriq Verification Code',
+        html: htmlContent,
+      });
+
+      console.log("Fallback email sent! Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    } catch (fallbackError) {
+      console.error('Nodemailer fallback failed:', fallbackError);
+    }
+  }
+};
+
 // Order Confirmation Email
 export const sendOrderConfirmation = async (order: any, email: string, name: string) => {
   const itemsList = order.items?.map((item: any) =>
@@ -18,7 +81,7 @@ export const sendOrderConfirmation = async (order: any, email: string, name: str
     </tr>`
   ).join('') || '';
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: FROM_SALES,
     to: email,
     subject: `Order Confirmed — #AUR-${order.id} | Auriq Fragrances`,
@@ -86,6 +149,11 @@ export const sendOrderConfirmation = async (order: any, email: string, name: str
       </div>
     `
   });
+
+  if (error) {
+    console.error('RESEND ORDER CONFIRM ERROR:', error);
+    throw new Error(error.message);
+  }
 };
 
 // Order Status Update Email
@@ -151,7 +219,7 @@ export const sendOrderStatusUpdate = async (order: any, email: string, name: str
       <p style="color:#888;font-size:12px;margin:8px 0 0;">Payment Method: ${order.payment_method}</p>
     </div>` : '';
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: fromAddress,
     to: email,
     subject: subjectLine,
@@ -182,11 +250,16 @@ export const sendOrderStatusUpdate = async (order: any, email: string, name: str
       </div>
     `
   });
+
+  if (error) {
+    console.error('RESEND STATUS UPDATE ERROR:', error);
+    throw new Error(error.message);
+  }
 };
 
 // Welcome Email
 export const sendWelcomeEmail = async (email: string, name: string) => {
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: FROM_MARKETING,
     to: email,
     subject: 'Welcome to Auriq Fragrances ✨',
@@ -210,11 +283,16 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
       </div>
     `
   });
+
+  if (error) {
+    console.error('RESEND WELCOME ERROR:', error);
+    throw new Error(error.message);
+  }
 };
 
 // Newsletter Confirmation Email
 export const sendNewsletterConfirmation = async (email: string) => {
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: FROM_MARKETING,
     to: email,
     subject: 'You are now subscribed to Auriq Fragrances',
@@ -237,11 +315,16 @@ export const sendNewsletterConfirmation = async (email: string) => {
       </div>
     `
   });
+
+  if (error) {
+    console.error('RESEND NEWSLETTER ERROR:', error);
+    throw new Error(error.message);
+  }
 };
 
 // Contact Form Reply — notify admin
 export const sendContactNotification = async (contactData: { name: string; email: string; subject?: string; message: string }) => {
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: FROM_SUPPORT,
     to: 'support@auriqfragrances.com',
     subject: `New Contact Message from ${contactData.name}`,
@@ -259,4 +342,9 @@ export const sendContactNotification = async (contactData: { name: string; email
     `,
     replyTo: contactData.email
   });
+
+  if (error) {
+    console.error('RESEND CONTACT NOTIFICATION ERROR:', error);
+    throw new Error(error.message);
+  }
 };

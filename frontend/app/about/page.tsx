@@ -28,9 +28,9 @@ export default function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-center mb-32">
-            <div className="lux-glass-card p-2 aspect-[4/5] relative overflow-hidden group">
+            <div className="lux-glass-card !bg-gold p-2 aspect-[4/5] relative overflow-hidden group">
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent z-10"></div>
-              <img src="https://images.unsplash.com/photo-1615526675159-e248c3021d3f?q=80&w=2787&auto=format&fit=crop" alt="Perfume Ingredients" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+              <img src="/about_us_2.png" alt="Auriq Perfume Crafting" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
             </div>
             <div className="flex flex-col gap-6">
               <h2 className="text-3xl font-serif text-foreground font-bold tracking-widest">Masterfully Crafted</h2>
@@ -53,9 +53,9 @@ export default function AboutPage() {
                 From our heavy, hand-polished crystal flacons to the magnetic zamac caps, the tactile experience of Auriq is designed to reflect the precious liquid held within.
               </p>
             </div>
-            <div className="lux-glass-card p-2 aspect-[4/5] relative overflow-hidden group order-1 md:order-2">
+            <div className="lux-glass-card !bg-gold p-2 aspect-[4/5] relative overflow-hidden group order-1 md:order-2">
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent z-10"></div>
-              <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop" alt="Auriq Perfume Bottle" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
+              <img src="/about_us_1.png" alt="Auriq Perfume Bottle" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" />
             </div>
           </div>
 

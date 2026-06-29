@@ -13,5 +13,15 @@ export const adminSettingsService = {
       body: JSON.stringify({ settings, group }),
     });
     return res;
+  },
+
+  uploadImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await adminFetch(`/upload`, {
+      method: "POST",
+      body: formData,
+    });
+    return res;
   }
 };

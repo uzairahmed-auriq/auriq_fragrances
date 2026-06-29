@@ -11,7 +11,7 @@ export default function PromotionalCards({ className = "", showNoise = true, set
       id: "promo1",
       tag: settings.PROMO1_TAG ? settings.PROMO1_TAG : "New Arrival",
       title: settings.PROMO1_TITLE ? settings.PROMO1_TITLE : "The Midnight Collection",
-      image_url: settings.PROMO1_IMAGE ? settings.PROMO1_IMAGE : "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=2787&auto=format&fit=crop",
+      image_url: settings.PROMO1_IMAGE ? settings.PROMO1_IMAGE : "/promotional_card_1.png",
       link_url: settings.PROMO1_LINK ? settings.PROMO1_LINK : "/collections",
       buttonText: settings.PROMO1_BTN ? settings.PROMO1_BTN : "Discover Now"
     },
@@ -19,7 +19,7 @@ export default function PromotionalCards({ className = "", showNoise = true, set
       id: "promo2",
       tag: settings.PROMO2_TAG ? settings.PROMO2_TAG : "Limited Edition",
       title: settings.PROMO2_TITLE ? settings.PROMO2_TITLE : "Summer Exclusives",
-      image_url: settings.PROMO2_IMAGE ? settings.PROMO2_IMAGE : "https://images.unsplash.com/photo-1615634260167-c8cdede054de?q=80&w=2800&auto=format&fit=crop",
+      image_url: settings.PROMO2_IMAGE ? settings.PROMO2_IMAGE : "/promotional_card_2.png",
       link_url: settings.PROMO2_LINK ? settings.PROMO2_LINK : "/collections?sort=best-sellers",
       buttonText: settings.PROMO2_BTN ? settings.PROMO2_BTN : "Shop Sale"
     }

@@ -109,7 +109,7 @@ export default function Header() {
             <input
               type="text"
               placeholder="Search fragrances..."
-              className="w-full bg-transparent border border-foreground/20 rounded-full py-2 pl-10 pr-4 focus:outline-none focus:border-gold transition-colors text-sm"
+              className="w-full bg-transparent border border-foreground/20 rounded-full py-2 !pl-10 pr-4 focus:outline-none focus:border-gold transition-colors text-sm"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   const val = (e.target as HTMLInputElement).value.trim();

@@ -191,7 +191,13 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex flex-col gap-2 group">
                           <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Phone Number</label>
-                          <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+92 (3XX) XXXXXXX" className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
+                          <div className="relative flex items-center">
+                            <span className="absolute left-4 text-foreground/50 text-sm font-medium">+92</span>
+                            <input type="tel" required value={phone.replace(/^\+92/, '')} onChange={(e) => {
+                              const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                              setPhone(digits ? `+92${digits}` : '');
+                            }} placeholder="300 123 4567" pattern="^\d{10}$" title="Must be exactly 10 digits" className="w-full bg-transparent border-b border-foreground/20 py-2 !pl-14 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
+                          </div>
                         </div>
                       </div>
                     </section>

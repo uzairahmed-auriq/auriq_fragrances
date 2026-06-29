@@ -16,3 +16,11 @@ export const verifyAccessToken = (token: string) => {
 export const verifyRefreshToken = (token: string) => {
   return jwt.verify(token, ENV.JWT_REFRESH_SECRET) as { userId: number }
 }
+
+export const generateTempToken = (payload: any) => {
+  return jwt.sign(payload, ENV.JWT_ACCESS_SECRET, { expiresIn: '15m' })
+}
+
+export const verifyTempToken = (token: string) => {
+  return jwt.verify(token, ENV.JWT_ACCESS_SECRET) as any
+}

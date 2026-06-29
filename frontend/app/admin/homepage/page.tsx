@@ -12,6 +12,7 @@ export default function HomepageCMS() {
   const { success, error } = useAdminToast();
   const [activeTab, setActiveTab] = useState<'announcements' | 'banners' | 'promo_cards' | 'featured'>('announcements');
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   const [settings, setSettings] = useState<Record<string, string>>({});
   
   const [ads, setAds] = useState<any[]>([]);
@@ -42,6 +43,27 @@ export default function HomepageCMS() {
 
   const handleSettingChange = (key: string, value: string) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, settingKey: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(settingKey);
+    try {
+      const res = await adminSettingsService.uploadImage(file);
+      if (res.success && res.url) {
+        handleSettingChange(settingKey, res.url);
+        success("Image uploaded successfully!");
+      } else {
+        error("Failed to upload image.");
+      }
+    } catch (err) {
+      error("Error uploading image.");
+    } finally {
+      setUploadingImage(null);
+      if (e.target) e.target.value = '';
+    }
   };
 
   const saveSettings = async () => {
@@ -143,13 +165,30 @@ export default function HomepageCMS() {
                       <input type="text" value={settings.PROMO1_TITLE || ''} onChange={(e) => handleSettingChange('PROMO1_TITLE', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" placeholder="e.g. The Midnight Collection" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Image URL</label>
-                      <input type="text" value={settings.PROMO1_IMAGE || ''} onChange={(e) => handleSettingChange('PROMO1_IMAGE', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" />
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Image Upload</label>
+                      <div className="flex items-center gap-3">
+                        {settings.PROMO1_IMAGE && (
+                          <div className="w-12 h-12 rounded bg-foreground/10 overflow-hidden shrink-0 border border-foreground/20">
+                            <img src={settings.PROMO1_IMAGE} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="flex-1 relative">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, 'PROMO1_IMAGE')} 
+                            className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-gold/10 file:text-gold hover:file:bg-gold/20 cursor-pointer" 
+                            disabled={uploadingImage === 'PROMO1_IMAGE'}
+                          />
+                          {uploadingImage === 'PROMO1_IMAGE' && (
+                            <div className="absolute inset-y-0 right-3 flex items-center">
+                              <RefreshCw className="w-4 h-4 animate-spin text-gold" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Link URL</label>
-                      <input type="text" value={settings.PROMO1_LINK || ''} onChange={(e) => handleSettingChange('PROMO1_LINK', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" />
-                    </div>
+
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Button Text</label>
                       <input type="text" value={settings.PROMO1_BTN || ''} onChange={(e) => handleSettingChange('PROMO1_BTN', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" placeholder="e.g. Discover Now" />
@@ -168,13 +207,30 @@ export default function HomepageCMS() {
                       <input type="text" value={settings.PROMO2_TITLE || ''} onChange={(e) => handleSettingChange('PROMO2_TITLE', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" placeholder="e.g. Summer Exclusives" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Image URL</label>
-                      <input type="text" value={settings.PROMO2_IMAGE || ''} onChange={(e) => handleSettingChange('PROMO2_IMAGE', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" />
+                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Image Upload</label>
+                      <div className="flex items-center gap-3">
+                        {settings.PROMO2_IMAGE && (
+                          <div className="w-12 h-12 rounded bg-foreground/10 overflow-hidden shrink-0 border border-foreground/20">
+                            <img src={settings.PROMO2_IMAGE} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        <div className="flex-1 relative">
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e, 'PROMO2_IMAGE')} 
+                            className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-bold file:bg-gold/10 file:text-gold hover:file:bg-gold/20 cursor-pointer" 
+                            disabled={uploadingImage === 'PROMO2_IMAGE'}
+                          />
+                          {uploadingImage === 'PROMO2_IMAGE' && (
+                            <div className="absolute inset-y-0 right-3 flex items-center">
+                              <RefreshCw className="w-4 h-4 animate-spin text-gold" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Link URL</label>
-                      <input type="text" value={settings.PROMO2_LINK || ''} onChange={(e) => handleSettingChange('PROMO2_LINK', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" />
-                    </div>
+
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Button Text</label>
                       <input type="text" value={settings.PROMO2_BTN || ''} onChange={(e) => handleSettingChange('PROMO2_BTN', e.target.value)} className="w-full bg-transparent border border-foreground/20 rounded-lg px-4 py-2 focus:border-gold outline-none text-sm" placeholder="e.g. Shop Sale" />

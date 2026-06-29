@@ -25,7 +25,7 @@ import { getAnalytics, getNotifications, getAuditLogs } from '../controllers/adm
 import { getInventory } from '../controllers/adminInventoryController';
 import { getAllReviews, updateReviewStatus } from '../controllers/adminReviewController';
 import { getMessages, updateMessageStatus, deleteMessage } from '../controllers/adminMessageController';
-import { getSettingsByGroup, updateSettings } from '../controllers/adminSettingsController';
+import { getSettingsByGroup, updateSettings, uploadGenericImage } from '../controllers/adminSettingsController';
 import { getAllTestimonials, createTestimonial, updateTestimonial, deleteTestimonial } from '../controllers/adminTestimonialController';
 import { getProfile, updateProfile, updatePassword, logoutOtherDevices } from '../controllers/adminProfileController';
 import { getSubscribers, deleteSubscriber, exportSubscribersCSV, sendCampaign } from '../controllers/adminNewsletterController';
@@ -44,6 +44,7 @@ router.get('/inventory', getInventory);
 // CMS Settings
 router.get('/cms/settings', getSettingsByGroup);
 router.put('/cms/settings', updateSettings);
+router.post('/upload', upload.single('file'), uploadGenericImage);
 
 // Testimonials
 router.get('/testimonials', getAllTestimonials);

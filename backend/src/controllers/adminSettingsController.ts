@@ -4,6 +4,7 @@ import { AdminAuthRequest } from '../middleware/authMiddleware';
 import { logAdminAction } from '../utils/auditLog';
 import axios from 'axios';
 import { ENV } from '../config/env';
+import { uploadToCloudinary } from '../utils/cloudinary';
 
 const prisma = new PrismaClient();
 
@@ -93,5 +94,29 @@ export const updateSettings = async (req: AdminAuthRequest, res: Response) => {
   } catch (error) {
     console.error('Error updating settings:', error);
     res.status(500).json({ success: false, message: 'Failed to update settings' });
+  }
+};
+
+export const uploadGenericImage = async (req: AdminAuthRequest, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const result = await uploadToCloudinary(req.file.buffer, 'auriq_cms');
+    
+    await logAdminAction(
+      req.admin!.id,
+      'UPLOAD_IMAGE',
+      'Media',
+      undefined,
+      undefined,
+      { url: result.secure_url }
+    );
+
+    res.json({ success: true, url: result.secure_url });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ success: false, message: 'Failed to upload image' });
   }
 };

@@ -18,6 +18,7 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
   const [sortBy, setSortBy] = useState(sortQuery);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [isDesktopFiltersOpen, setIsDesktopFiltersOpen] = useState(false);
   
   const [products] = useState<any[]>(initialProducts);
   const [search, setSearch] = useState(searchQuery);
@@ -211,9 +212,11 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
             </div>
 
             {/* Desktop Sidebar */}
-            <div className="hidden lg:block w-1/4 sticky top-32">
-              <FilterSidebar />
-            </div>
+            {isDesktopFiltersOpen && (
+              <div className="hidden lg:block w-1/4 sticky top-32">
+                <FilterSidebar />
+              </div>
+            )}
 
             {/* Mobile Sidebar Drawer */}
             {isMobileFiltersOpen && (
@@ -232,10 +235,17 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
             )}
 
             {/* Product Grid Area */}
-            <div className="w-full lg:w-3/4 flex flex-col">
+            <div className={`w-full ${isDesktopFiltersOpen ? 'lg:w-3/4' : 'lg:w-full'} flex flex-col transition-all duration-300`}>
               
-              {/* Desktop Top Toolbar (Sorting only since filters are left) */}
-              <div className="hidden lg:flex justify-end items-center mb-8 pb-4 border-b border-foreground/5 relative">
+              {/* Desktop Top Toolbar */}
+              <div className="hidden lg:flex justify-between items-center mb-8 pb-4 border-b border-foreground/5 relative">
+                <button 
+                  onClick={() => setIsDesktopFiltersOpen(!isDesktopFiltersOpen)}
+                  className="flex items-center gap-2 text-foreground hover:text-gold transition-colors text-xs font-bold tracking-widest uppercase"
+                >
+                  <Filter className="w-4 h-4" />
+                  {isDesktopFiltersOpen ? 'Hide Filters' : 'Show Filters'}
+                </button>
                 <div className="flex items-center gap-3">
                   <span className="text-foreground/40 text-[10px] uppercase tracking-[0.2em] font-bold">Sort By:</span>
                   <button 

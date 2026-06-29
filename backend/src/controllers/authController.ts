@@ -1,9 +1,10 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
 import prisma from '../config/database'
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt'
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, generateTempToken, verifyTempToken } from '../utils/jwt'
 import { OAuth2Client } from 'google-auth-library'
 import axios from 'axios'
+import { sendOTPEmail, sendWelcomeEmail } from '../services/emailService'
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
@@ -24,27 +25,23 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, phone },
+      data: { name, email, password: hashedPassword, phone, is_email_verified: false, email_verify_token: otp },
       select: { id: true, name: true, email: true, phone: true, created_at: true }
     })
 
-    const accessToken = generateAccessToken(user.id)
-    const refreshToken = generateRefreshToken(user.id)
-
-    await prisma.refreshToken.create({
-      data: {
-        token: refreshToken,
-        user_id: user.id,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
-    })
+    try {
+      await sendOTPEmail(email, otp)
+    } catch (e) {
+      console.error('Failed to send OTP', e)
+    }
 
     res.status(201).json({
       success: true,
-      message: 'Account created successfully',
-      data: { user, accessToken, refreshToken }
+      message: 'Account created successfully. Please verify your email.',
+      data: { email }
     })
   } catch (error) {
     console.error('REGISTER ERROR:', error)
@@ -71,6 +68,11 @@ export const login = async (req: Request, res: Response) => {
 
     if (!user.is_active) {
       res.status(403).json({ success: false, message: 'Account is deactivated' })
+      return
+    }
+
+    if (user.is_email_verified === false) {
+      res.status(403).json({ success: false, message: 'Email not verified. Please check your inbox for the OTP.' })
       return
     }
 
@@ -116,6 +118,71 @@ export const logout = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('LOGOUT ERROR:', error)
     res.status(500).json({ success: false, message: 'Server error' })
+  }
+}
+
+// POST /api/auth/verify-email
+export const verifyEmail = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+      res.status(400).json({ success: false, message: 'Email and OTP required' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      res.status(404).json({ success: false, message: 'User not found' });
+      return;
+    }
+
+    if (user.is_email_verified) {
+      res.status(400).json({ success: false, message: 'Email already verified' });
+      return;
+    }
+
+    if (user.email_verify_token !== otp) {
+      res.status(400).json({ success: false, message: 'Invalid OTP' });
+      return;
+    }
+
+    // Mark as verified
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { is_email_verified: true, email_verify_token: null }
+    });
+
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        user_id: user.id,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // Send welcome email asynchronously
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+    } catch(e) {
+      console.error("Welcome email failed", e);
+    }
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+      data: {
+        user: { id: user.id, name: user.name, email: user.email },
+        accessToken,
+        refreshToken
+      }
+    });
+
+  } catch (error) {
+    console.error('VERIFY EMAIL ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 }
 
@@ -174,11 +241,19 @@ export const googleLogin = async (req: Request, res: Response) => {
     const { email, name } = payload;
 
     let user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      user = await prisma.user.create({
-        data: { name: name || 'Google User', email, is_email_verified: true, password: null },
+    
+    if (!user || !user.phone) {
+      const tempToken = generateTempToken({ email, name: name || 'Google User', provider: 'google' });
+      res.json({
+        success: true,
+        requirePhone: true,
+        tempToken,
+        message: 'Phone number required to complete registration'
       });
-    } else if (!user.is_active) {
+      return;
+    }
+
+    if (!user.is_active) {
       res.status(403).json({ success: false, message: 'Account is deactivated' });
       return;
     }
@@ -226,11 +301,19 @@ export const facebookLogin = async (req: Request, res: Response) => {
     const { email, name } = data;
 
     let user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      user = await prisma.user.create({
-        data: { name: name || 'Facebook User', email, is_email_verified: true, password: null },
+    
+    if (!user || !user.phone) {
+      const tempToken = generateTempToken({ email, name: name || 'Facebook User', provider: 'facebook' });
+      res.json({
+        success: true,
+        requirePhone: true,
+        tempToken,
+        message: 'Phone number required to complete registration'
       });
-    } else if (!user.is_active) {
+      return;
+    }
+
+    if (!user.is_active) {
       res.status(403).json({ success: false, message: 'Account is deactivated' });
       return;
     }
@@ -256,6 +339,70 @@ export const facebookLogin = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('FACEBOOK LOGIN ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// POST /api/auth/complete-oauth
+export const completeOAuth = async (req: Request, res: Response) => {
+  try {
+    const { tempToken, phone, password } = req.body;
+    if (!tempToken || !phone || !password || password.length < 8) {
+      res.status(400).json({ success: false, message: 'Token, phone number, and a password (min 8 chars) are required' });
+      return;
+    }
+
+    let payload: any;
+    try {
+      payload = verifyTempToken(tempToken);
+    } catch (e) {
+      res.status(401).json({ success: false, message: 'Session expired. Please sign in again.' });
+      return;
+    }
+
+    const { email, name, provider } = payload;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    let user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      user = await prisma.user.create({
+        data: { name, email, phone, is_email_verified: true, password: hashedPassword },
+      });
+    } else {
+      user = await prisma.user.update({
+        where: { email },
+        data: { phone, password: hashedPassword }
+      });
+    }
+
+    if (!user.is_active) {
+      res.status(403).json({ success: false, message: 'Account is deactivated' });
+      return;
+    }
+
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
+
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        user_id: user.id,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Account completed successfully',
+      data: {
+        user: { id: user.id, name: user.name, email: user.email },
+        accessToken,
+        refreshToken
+      }
+    });
+  } catch (error) {
+    console.error('COMPLETE OAUTH ERROR:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

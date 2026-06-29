@@ -80,6 +80,9 @@ app.listen(ENV.PORT, async () => {
     await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS carts_session_id_key ON carts(session_id);`);
     await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS carts_session_id_idx ON carts(session_id);`);
     await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS orders_session_id_idx ON orders(session_id);`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE product_images ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE ads ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;`);
     console.log('Auto-migration complete.');
   } catch (error) {
     console.error('Auto-migration failed:', error);

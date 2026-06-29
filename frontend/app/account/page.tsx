@@ -18,6 +18,14 @@ function AccountContent() {
   const [activeTab, setActiveTab] = useState("orders");
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'oauth-phone'>('login');
+  
+  // OAuth Complete State
+  const [oauthTempToken, setOauthTempToken] = useState("");
+  const [oauthPhone, setOauthPhone] = useState("");
+  const [oauthPassword, setOauthPassword] = useState("");
+  const [oauthConfirmPassword, setOauthConfirmPassword] = useState("");
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   // Login State
   const [loginEmail, setLoginEmail] = useState("");
@@ -30,8 +38,12 @@ function AccountContent() {
   const [regLastName, setRegLastName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regPhone, setRegPhone] = useState("");
   const [regError, setRegError] = useState("");
   const [regLoading, setRegLoading] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpLoading, setOtpLoading] = useState(false);
 
   // User State
   const [user, setUser] = useState<any>(null);
@@ -137,7 +149,28 @@ function AccountContent() {
       const name = `${regFirstName} ${regLastName}`.trim();
       const response = await apiFetch('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ name, email: regEmail, password: regPassword }),
+        body: JSON.stringify({ name, email: regEmail, password: regPassword, phone: regPhone }),
+      });
+      
+      if (response.success) {
+        setShowOtp(true);
+      }
+    } catch (err: any) {
+      setRegError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setRegLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError("");
+    setOtpLoading(true);
+    
+    try {
+      const response = await apiFetch('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ email: regEmail, otp: otpCode }),
       });
       
       if (response.success) {
@@ -146,9 +179,43 @@ function AccountContent() {
         window.dispatchEvent(new Event('loginStateChange'));
       }
     } catch (err: any) {
-      setRegError(err.message || 'Registration failed. Please try again.');
+      setRegError(err.message || 'Invalid verification code. Please try again.');
     } finally {
-      setRegLoading(false);
+      setOtpLoading(false);
+    }
+  };
+
+  const handleCompleteOAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+
+    if (oauthPassword !== oauthConfirmPassword) {
+      setLoginError("Passwords do not match");
+      return;
+    }
+
+    if (oauthPassword.length < 8) {
+      setLoginError("Password must be at least 8 characters long");
+      return;
+    }
+
+    setOauthLoading(true);
+    
+    try {
+      const response = await apiFetch('/auth/complete-oauth', {
+        method: 'POST',
+        body: JSON.stringify({ tempToken: oauthTempToken, phone: oauthPhone, password: oauthPassword }),
+      });
+      
+      if (response.success) {
+        localStorage.setItem('auriqAccessToken', response.data.accessToken);
+        localStorage.setItem('auriqRefreshToken', response.data.refreshToken);
+        window.dispatchEvent(new Event('loginStateChange'));
+      }
+    } catch (err: any) {
+      setLoginError(err.message || 'Failed to complete profile. Please try again.');
+    } finally {
+      setOauthLoading(false);
     }
   };
 
@@ -268,7 +335,16 @@ function AccountContent() {
         body: JSON.stringify(provider === 'google' ? { token } : { accessToken: token }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || `${provider} login failed`);
+      
+      if (!response.ok) {
+        throw new Error(data.message || `${provider} login failed`);
+      }
+      
+      if (data.requirePhone) {
+        setOauthTempToken(data.tempToken);
+        setAuthMode('oauth-phone');
+        return;
+      }
       
       localStorage.setItem('auriqAccessToken', data.data.accessToken);
       localStorage.setItem('auriqRefreshToken', data.data.refreshToken);
@@ -304,22 +380,59 @@ function AccountContent() {
         </p>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-12 lg:gap-24 max-w-5xl mx-auto">
-        {/* Sign In Form */}
+      <div className="max-w-md mx-auto w-full">
+        {authMode === 'oauth-phone' ? (
+        <div className="flex-1 lux-glass-card p-8 md:p-12 relative z-10 border border-foreground/5 bg-foreground/[0.02]">
+          <h2 className="text-2xl font-serif text-foreground mb-8 font-bold border-b border-foreground/10 pb-4">Complete Profile</h2>
+          <form className="flex flex-col gap-6" onSubmit={handleCompleteOAuth}>
+            {loginError && <div className="text-red-500 text-xs font-bold bg-red-500/10 p-3 border border-red-500/20">{loginError}</div>}
+            <p className="text-sm text-foreground/70 mb-2">Please provide your phone number to complete your registration and secure your account.</p>
+            
+            <div className="flex flex-col gap-3 group">
+              <label htmlFor="oauth-phone" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Phone Number</label>
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-foreground/50 text-sm font-medium">+92</span>
+                <input type="tel" id="oauth-phone" value={oauthPhone.replace(/^\+92/, '')} onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setOauthPhone(digits ? `+92${digits}` : '');
+                }} placeholder="300 123 4567" pattern="^\d{10}$" title="Must be exactly 10 digits" className="w-full bg-transparent border-b border-foreground/10 py-2 !pl-14 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 group">
+              <label htmlFor="oauth-password" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Create Password</label>
+              <input type="password" id="oauth-password" value={oauthPassword} onChange={(e) => setOauthPassword(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" minLength={8} required />
+            </div>
+
+            <div className="flex flex-col gap-3 group">
+              <label htmlFor="oauth-confirm-password" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Confirm Password</label>
+              <input type="password" id="oauth-confirm-password" value={oauthConfirmPassword} onChange={(e) => setOauthConfirmPassword(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" minLength={8} required />
+            </div>
+
+            <button type="submit" disabled={oauthLoading} className="w-full bg-gold text-background py-4 mt-4 font-bold tracking-[0.2em] uppercase hover:bg-foreground transition-colors disabled:opacity-50">
+              {oauthLoading ? "Saving..." : "Save & Continue"}
+            </button>
+            <p className="text-center text-xs mt-4 text-foreground/60 tracking-widest uppercase">
+              <button type="button" onClick={() => setAuthMode('login')} className="text-foreground/50 font-bold hover:underline">Cancel</button>
+            </p>
+          </form>
+        </div>
+        ) : authMode === 'login' ? (
         <div className="flex-1 lux-glass-card p-8 md:p-12 relative z-10">
+          {/* Sign In Form */}
           <h2 className="text-2xl font-serif text-foreground mb-8 font-bold border-b border-foreground/10 pb-4">Sign In</h2>
           <form className="flex flex-col gap-6" onSubmit={handleLoginSubmit}>
             {loginError && <div className="text-red-500 text-xs font-bold bg-red-500/10 p-3 border border-red-500/20">{loginError}</div>}
             <div className="flex flex-col gap-3 group">
               <label htmlFor="login-email" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
                 <input
                   type="email"
                   id="login-email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  className="w-full bg-transparent border-b border-foreground/10 py-2 pl-8 text-sm focus:outline-none focus:border-gold transition-colors text-foreground"
+                  className="w-full bg-transparent border-b border-foreground/10 py-2 !pl-12 text-sm focus:outline-none focus:border-gold transition-colors text-foreground"
                   required
                 />
               </div>
@@ -328,13 +441,13 @@ function AccountContent() {
             <div className="flex flex-col gap-3 group">
               <label htmlFor="login-password" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Password</label>
               <div className="relative">
-                <Lock className="absolute left-0 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
                 <input
                   type="password"
                   id="login-password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  className="w-full bg-transparent border-b border-foreground/10 py-2 pl-8 text-sm focus:outline-none focus:border-gold transition-colors text-foreground"
+                  className="w-full bg-transparent border-b border-foreground/10 py-2 !pl-12 text-sm focus:outline-none focus:border-gold transition-colors text-foreground"
                   minLength={8}
                   required
                 />
@@ -355,7 +468,7 @@ function AccountContent() {
               <div className="flex-grow border-t border-foreground/10"></div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-4">
               <button type="button" onClick={() => googleLogin()} className="flex items-center justify-center gap-3 w-full border border-foreground/20 text-foreground py-3 text-xs font-bold tracking-widest uppercase hover:bg-foreground/5 transition-colors">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -367,67 +480,94 @@ function AccountContent() {
               </button>
 
             </div>
+            
+            <p className="text-center text-xs mt-8 text-foreground/60 tracking-widest uppercase">
+              Don't have an account? <button type="button" onClick={() => setAuthMode('register')} className="text-gold font-bold hover:underline ml-2">Create One</button>
+            </p>
           </form>
         </div>
-
-        {/* Vertical Divider */}
-        <div className="hidden md:block w-px bg-foreground/10"></div>
-
-        {/* Register Form */}
+        ) : (
         <div className="flex-1 lux-glass-card p-8 md:p-12 relative z-10 border border-foreground/5 bg-foreground/[0.02]">
+          {/* Register Form */}
           <h2 className="text-2xl font-serif text-foreground mb-8 font-bold border-b border-foreground/10 pb-4">Create Account</h2>
-          <form className="flex flex-col gap-6" onSubmit={handleRegisterSubmit}>
-            {regError && <div className="text-red-500 text-xs font-bold bg-red-500/10 p-3 border border-red-500/20">{regError}</div>}
-            <div className="grid grid-cols-2 gap-4">
+          {showOtp ? (
+            <form className="flex flex-col gap-6" onSubmit={handleVerifyOtp}>
+              {regError && <div className="text-red-500 text-xs font-bold bg-red-500/10 p-3 border border-red-500/20">{regError}</div>}
+              <p className="text-sm text-foreground/70 mb-2">We've sent a 6-digit verification code to <strong className="text-gold">{regEmail}</strong>. Please enter it below.</p>
+              
               <div className="flex flex-col gap-3 group">
-                <label htmlFor="reg-first" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">First Name</label>
-                <input type="text" id="reg-first" value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+                <label htmlFor="otp-code" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Verification Code</label>
+                <input type="text" id="otp-code" value={otpCode} onChange={(e) => setOtpCode(e.target.value)} maxLength={6} placeholder="Enter 6-digit code" className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground text-center tracking-[1em] font-bold" required />
               </div>
+
+              <button type="submit" disabled={otpLoading} className="w-full bg-gold text-background py-4 mt-4 font-bold tracking-[0.2em] uppercase hover:bg-foreground transition-colors disabled:opacity-50">
+                {otpLoading ? "Verifying..." : "Verify & Complete"}
+              </button>
+            </form>
+          ) : (
+            <form className="flex flex-col gap-6" onSubmit={handleRegisterSubmit}>
+              {regError && <div className="text-red-500 text-xs font-bold bg-red-500/10 p-3 border border-red-500/20">{regError}</div>}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-3 group">
+                  <label htmlFor="reg-first" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">First Name</label>
+                  <input type="text" id="reg-first" value={regFirstName} onChange={(e) => setRegFirstName(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+                </div>
+                <div className="flex flex-col gap-3 group">
+                  <label htmlFor="reg-last" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Last Name (Optional)</label>
+                  <input type="text" id="reg-last" value={regLastName} onChange={(e) => setRegLastName(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" />
+                </div>
+              </div>
+
               <div className="flex flex-col gap-3 group">
-                <label htmlFor="reg-last" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Last Name</label>
-                <input type="text" id="reg-last" value={regLastName} onChange={(e) => setRegLastName(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+                <label htmlFor="reg-email" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Email Address</label>
+                <input type="email" id="reg-email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
               </div>
-            </div>
 
-            <div className="flex flex-col gap-3 group">
-              <label htmlFor="reg-email" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Email Address</label>
-              <input type="email" id="reg-email" value={regEmail} onChange={(e) => setRegEmail(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
-            </div>
+              <div className="flex flex-col gap-3 group">
+                <label htmlFor="reg-phone" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Phone Number</label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-4 text-foreground/50 text-sm font-medium">+92</span>
+                  <input type="tel" id="reg-phone" value={regPhone.replace(/^\+92/, '')} onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setRegPhone(digits ? `+92${digits}` : '');
+                  }} placeholder="300 123 4567" pattern="^\d{10}$" title="Must be exactly 10 digits" className="w-full bg-transparent border-b border-foreground/10 py-2 !pl-14 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+                </div>
+              </div>
 
-            <div className="flex flex-col gap-3 group">
-              <label htmlFor="reg-password" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Password</label>
-              <input type="password" id="reg-password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" minLength={8} required />
-            </div>
+              <div className="flex flex-col gap-3 group">
+                <label htmlFor="reg-password" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Password</label>
+                <input type="password" id="reg-password" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" minLength={8} required />
+              </div>
 
-            <button type="submit" disabled={regLoading} className="w-full border border-foreground/20 text-foreground py-4 mt-4 font-bold tracking-[0.2em] uppercase hover:bg-foreground hover:text-background transition-colors disabled:opacity-50">
-              {regLoading ? "Registering..." : "Register"}
-            </button>
-
-            <div className="relative flex items-center py-2 mt-2">
-              <div className="flex-grow border-t border-foreground/10"></div>
-              <span className="flex-shrink-0 mx-4 text-[10px] uppercase tracking-[0.2em] text-foreground/40 font-bold">Or register with</span>
-              <div className="flex-grow border-t border-foreground/10"></div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button type="button" onClick={() => googleLogin()} className="flex items-center justify-center gap-3 w-full border border-foreground/20 text-foreground py-3 text-xs font-bold tracking-widest uppercase hover:bg-foreground/5 transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                </svg>
-                Google
+              <button type="submit" disabled={regLoading} className="w-full border border-foreground/20 text-foreground py-4 mt-4 font-bold tracking-[0.2em] uppercase hover:bg-foreground hover:text-background transition-colors disabled:opacity-50">
+                {regLoading ? "Registering..." : "Register"}
               </button>
-              <button type="button" onClick={() => googleLogin()} className="flex items-center justify-center gap-3 w-full border border-foreground/20 text-foreground py-3 text-xs font-bold tracking-widest uppercase hover:bg-foreground/5 transition-colors">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                Facebook
-              </button>
-            </div>
-          </form>
+
+              <div className="relative flex items-center py-2 mt-2">
+                <div className="flex-grow border-t border-foreground/10"></div>
+                <span className="flex-shrink-0 mx-4 text-[10px] uppercase tracking-[0.2em] text-foreground/40 font-bold">Or register with</span>
+                <div className="flex-grow border-t border-foreground/10"></div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <button type="button" onClick={() => googleLogin()} className="flex items-center justify-center gap-3 w-full border border-foreground/20 text-foreground py-3 text-xs font-bold tracking-widest uppercase hover:bg-foreground/5 transition-colors">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Google
+                </button>
+              </div>
+            </form>
+          )}
+          
+          <p className="text-center text-xs mt-8 text-foreground/60 tracking-widest uppercase">
+            Already have an account? <button type="button" onClick={() => setAuthMode('login')} className="text-gold font-bold hover:underline ml-2">Sign In</button>
+          </p>
         </div>
+        )}
       </div>
     </div>
   );
@@ -444,7 +584,7 @@ function AccountContent() {
         </div>
         <button 
           onClick={handleLogout}
-          className="hidden md:flex items-center gap-2 text-foreground/50 hover:text-red-400 transition-colors text-xs font-bold tracking-[0.2em] uppercase"
+          className="hidden md:flex items-center gap-2 px-6 py-3 border border-foreground/10 text-foreground/50 hover:lux-glass-card hover:text-red-400 hover:border-red-400/30 transition-all text-xs font-bold tracking-[0.2em] uppercase"
         >
           <LogOut className="w-4 h-4" />
           Sign Out
@@ -456,7 +596,7 @@ function AccountContent() {
         <div className="w-full md:w-64 shrink-0 flex flex-col gap-2">
           <button 
             onClick={() => setActiveTab('orders')}
-            className={`flex items-center justify-between p-4 border border-foreground/10 transition-colors ${activeTab === 'orders' ? 'bg-gold/10 border-gold text-foreground' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
+            className={`flex items-center justify-between p-4 transition-all ${activeTab === 'orders' ? 'lux-glass-card border-gold text-gold shadow-[0_0_15px_rgba(201,164,77,0.15)]' : 'border border-transparent bg-transparent text-foreground/60 hover:lux-glass-card hover:text-foreground hover:border-foreground/10'}`}
           >
             <div className="flex items-center gap-3">
               <Package className="w-5 h-5" />
@@ -467,7 +607,7 @@ function AccountContent() {
           
           <button 
             onClick={() => setActiveTab('profile')}
-            className={`flex items-center justify-between p-4 border border-foreground/10 transition-colors ${activeTab === 'profile' ? 'bg-gold/10 border-gold text-foreground' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
+            className={`flex items-center justify-between p-4 transition-all ${activeTab === 'profile' ? 'lux-glass-card border-gold text-gold shadow-[0_0_15px_rgba(201,164,77,0.15)]' : 'border border-transparent bg-transparent text-foreground/60 hover:lux-glass-card hover:text-foreground hover:border-foreground/10'}`}
           >
             <div className="flex items-center gap-3">
               <User className="w-5 h-5" />
@@ -478,7 +618,7 @@ function AccountContent() {
 
           <button 
             onClick={() => setActiveTab('addresses')}
-            className={`flex items-center justify-between p-4 border border-foreground/10 transition-colors ${activeTab === 'addresses' ? 'bg-gold/10 border-gold text-foreground' : 'text-foreground/60 hover:text-foreground hover:bg-foreground/5'}`}
+            className={`flex items-center justify-between p-4 transition-all ${activeTab === 'addresses' ? 'lux-glass-card border-gold text-gold shadow-[0_0_15px_rgba(201,164,77,0.15)]' : 'border border-transparent bg-transparent text-foreground/60 hover:lux-glass-card hover:text-foreground hover:border-foreground/10'}`}
           >
             <div className="flex items-center gap-3">
               <MapPin className="w-5 h-5" />
@@ -489,7 +629,7 @@ function AccountContent() {
 
           <button 
             onClick={handleLogout}
-            className="flex md:hidden items-center justify-between p-4 border border-foreground/10 text-foreground/60 hover:text-red-400 hover:bg-foreground/5 transition-colors mt-8"
+            className="flex md:hidden items-center justify-between p-4 border border-transparent bg-transparent text-foreground/60 hover:lux-glass-card hover:text-red-400 hover:border-red-400/30 transition-all mt-8"
           >
             <div className="flex items-center gap-3">
               <LogOut className="w-5 h-5" />
@@ -508,7 +648,7 @@ function AccountContent() {
               <form className="flex flex-col md:flex-row gap-4 mb-8" onSubmit={(e) => { e.preventDefault(); alert('Tracking information will be connected to the backend soon!'); }}>
                 <div className="flex-1 relative group">
                   <Package className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30 group-focus-within:text-gold transition-colors" />
-                  <input type="text" placeholder="Enter your Order ID (e.g. AQ-8932)" required className="w-full bg-transparent border-b border-foreground/20 py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
+                  <input type="text" placeholder="Enter your Order ID (e.g. AQ-8932)" required className="w-full bg-transparent border-b border-foreground/20 py-3 !pl-12 pr-4 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
                 </div>
                 <button type="submit" className="bg-gold text-background px-8 py-3 text-xs font-bold tracking-[0.2em] uppercase hover:bg-foreground transition-colors shrink-0">
                   Track
@@ -542,7 +682,7 @@ function AccountContent() {
           )}
 
           {activeTab === 'profile' && (
-            <div className="flex flex-col gap-6 relative z-10 max-w-xl">
+            <div className="flex flex-col gap-6 relative z-10 w-full">
               <h2 className="text-2xl font-serif text-foreground mb-6 font-bold">Profile Details</h2>
               <form className="flex flex-col gap-6" onSubmit={handleUpdateProfile}>
                 
@@ -561,7 +701,13 @@ function AccountContent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex flex-col gap-3 group">
                     <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Phone Number</label>
-                    <input type="tel" value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" />
+                    <div className="relative flex items-center">
+                      <span className="absolute left-4 text-foreground/50 text-sm font-medium">+92</span>
+                      <input type="tel" value={profilePhone.replace(/^\+92/, '')} onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setProfilePhone(digits ? `+92${digits}` : '');
+                      }} placeholder="300 123 4567" pattern="^\d{10}$" title="Must be exactly 10 digits" className="w-full bg-transparent border-b border-foreground/10 py-2 !pl-14 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" />
+                    </div>
                   </div>
                 </div>
 
@@ -649,7 +795,13 @@ function AccountContent() {
                     </div>
                     <div className="flex flex-col gap-3 group">
                       <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Phone</label>
-                      <input type="tel" value={addrPhone} onChange={e => setAddrPhone(e.target.value)} className="bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+                      <div className="relative flex items-center">
+                        <span className="absolute left-4 text-foreground/50 text-sm font-medium">+92</span>
+                        <input type="tel" value={addrPhone.replace(/^\+92/, '')} onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setAddrPhone(digits ? `+92${digits}` : '');
+                        }} placeholder="300 123 4567" pattern="^\d{10}$" title="Must be exactly 10 digits" className="w-full bg-transparent border-b border-foreground/10 py-2 !pl-14 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
