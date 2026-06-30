@@ -7,12 +7,15 @@ export const getAllCustomers = async (req: Request, res: Response) => {
     const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 20));
     const search = req.query.search as string || '';
 
-    const where = search ? {
-      OR: [
-        { name: { contains: search, mode: 'insensitive' as const } },
-        { email: { contains: search, mode: 'insensitive' as const } }
-      ]
-    } : {};
+    const where = {
+      is_email_verified: true,
+      ...(search ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { email: { contains: search, mode: 'insensitive' as const } }
+        ]
+      } : {})
+    };
 
     const [total, customers] = await Promise.all([
       prisma.user.count({ where }),
