@@ -96,10 +96,17 @@ export default function Header() {
       <AnnouncementBar />
       <div className="container-lux flex items-center justify-between h-20">
         {/* Left: Logo */}
-        <div className="flex items-center gap-2">
-          <Link href="/#hero" onClick={handleLogoClick} className="flex items-center gap-3">
-            <Image src="/icon.svg" alt="Auriq Logo" width={40} height={40} className="w-10 h-10 object-cover rounded-full bg-black/20" priority />
-            <span className="text-2xl font-serif tracking-widest font-bold hidden sm:block">AURIQ</span>
+        <div className="flex items-center">
+          <Link href="/#hero" onClick={handleLogoClick} className="flex items-center">
+            <div className="relative w-14 h-14 md:w-16 md:h-16">
+              <Image 
+                src="/icon.png" 
+                alt="Auriq Logo" 
+                fill 
+                className="object-contain rounded-full bg-black/20" 
+                priority 
+              />
+            </div>
           </Link>
         </div>
 

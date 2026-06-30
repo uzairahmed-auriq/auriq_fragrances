@@ -51,7 +51,7 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
 
       {/* Hero Content */}
       <div className="relative z-10 container-lux flex-1 flex flex-col items-center justify-center text-center mt-12 mb-16">
-        <div className="relative w-[95%] sm:w-[90%] max-w-5xl md:max-w-6xl lg:max-w-screen-2xl h-48 md:h-64 lg:h-96 mb-8 mt-6" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
+        <div className="relative w-[95%] sm:w-[90%] max-w-5xl md:max-w-6xl lg:max-w-screen-2xl h-48 md:h-64 lg:h-96 mb-0 mt-6" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
           <Image 
             src="/hero-logo.png" 
             alt={title}
@@ -60,9 +60,15 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
             priority
           />
         </div>
-        <h2 className="text-xl md:text-2xl font-serif text-gold italic mb-6 drop-shadow-md">
-          {subtitle}
-        </h2>
+        <div className="relative w-[400px] md:w-[500px] lg:w-[600px] h-[60px] md:h-[80px] lg:h-[100px] -mt-2 md:-mt-6 mb-6">
+          <Image 
+            src="/Essence_in_motion.png" 
+            alt={subtitle || "Essence In Motion"}
+            fill
+            className="object-contain drop-shadow-md"
+            priority
+          />
+        </div>
         <p className="max-w-2xl text-white/90 text-sm md:text-base leading-relaxed mb-10 drop-shadow-md">
           {description}
         </p>
