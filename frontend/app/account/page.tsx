@@ -18,8 +18,8 @@ function AccountContent() {
   const [activeTab, setActiveTab] = useState("orders");
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'register' | 'oauth-phone'>('login');
-  
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'oauth-phone' | 'forgot-password' | 'reset-password'>('login');
+
   // OAuth Complete State
   const [oauthTempToken, setOauthTempToken] = useState("");
   const [oauthPhone, setOauthPhone] = useState("");
@@ -32,6 +32,20 @@ function AccountContent() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Forgot Password State
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotError, setForgotError] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+
+  // Reset Password State
+  const [resetToken, setResetToken] = useState("");
+  const [resetNewPassword, setResetNewPassword] = useState("");
+  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Register State
   const [regFirstName, setRegFirstName] = useState("");
@@ -113,9 +127,65 @@ function AccountContent() {
     const tab = searchParams.get('tab');
     if (tab) setActiveTab(tab);
 
+    const token = searchParams.get('resetToken');
+    if (token) {
+      setResetToken(token);
+      setAuthMode('reset-password');
+    }
+
     window.addEventListener('loginStateChange', checkLoginState);
     return () => window.removeEventListener('loginStateChange', checkLoginState);
   }, [searchParams]);
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotLoading(true);
+
+    try {
+      const response = await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      if (response.success) {
+        setForgotSent(true);
+      }
+    } catch (err: any) {
+      setForgotError(err.message || 'Failed to send reset link. Please try again.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+
+    if (resetNewPassword !== resetConfirmPassword) {
+      setResetError("Passwords do not match");
+      return;
+    }
+
+    setResetLoading(true);
+
+    try {
+      const response = await apiFetch('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ token: resetToken, password: resetNewPassword }),
+      });
+
+      if (response.success) {
+        setResetSuccess(true);
+        setResetNewPassword("");
+        setResetConfirmPassword("");
+      }
+    } catch (err: any) {
+      setResetError(err.message || 'Failed to reset password. The link may have expired.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -381,7 +451,66 @@ function AccountContent() {
       </div>
 
       <div className="max-w-md mx-auto w-full">
-        {authMode === 'oauth-phone' ? (
+        {authMode === 'forgot-password' ? (
+        <div className="flex-1 lux-glass-card p-8 md:p-12 relative z-10 border border-foreground/5 bg-foreground/[0.02]">
+          <h2 className="text-2xl font-serif text-foreground mb-8 font-bold border-b border-foreground/10 pb-4">Reset Password</h2>
+          {forgotSent ? (
+            <div className="flex flex-col gap-6">
+              <p className="text-sm text-foreground/70">If an account exists for <strong className="text-gold">{forgotEmail}</strong>, we've sent a link to reset your password. The link expires in 30 minutes.</p>
+              <p className="text-center text-xs mt-4 text-foreground/60 tracking-widest uppercase">
+                <button type="button" onClick={() => setAuthMode('login')} className="text-gold font-bold hover:underline">Back to Sign In</button>
+              </p>
+            </div>
+          ) : (
+            <form className="flex flex-col gap-6" onSubmit={handleForgotPasswordSubmit}>
+              {forgotError && <div className="text-red-500 text-xs font-bold bg-red-500/10 p-3 border border-red-500/20">{forgotError}</div>}
+              <p className="text-sm text-foreground/70 mb-2">Enter your account email and we'll send you a link to reset your password.</p>
+
+              <div className="flex flex-col gap-3 group">
+                <label htmlFor="forgot-email" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Email Address</label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
+                  <input type="email" id="forgot-email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 !pl-12 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" required />
+                </div>
+              </div>
+
+              <button type="submit" disabled={forgotLoading} className="w-full bg-gold text-background py-4 mt-4 font-bold tracking-[0.2em] uppercase hover:bg-foreground transition-colors disabled:opacity-50">
+                {forgotLoading ? "Sending..." : "Send Reset Link"}
+              </button>
+              <p className="text-center text-xs mt-4 text-foreground/60 tracking-widest uppercase">
+                <button type="button" onClick={() => setAuthMode('login')} className="text-foreground/50 font-bold hover:underline">Back to Sign In</button>
+              </p>
+            </form>
+          )}
+        </div>
+        ) : authMode === 'reset-password' ? (
+        <div className="flex-1 lux-glass-card p-8 md:p-12 relative z-10 border border-foreground/5 bg-foreground/[0.02]">
+          <h2 className="text-2xl font-serif text-foreground mb-8 font-bold border-b border-foreground/10 pb-4">Set New Password</h2>
+          {resetSuccess ? (
+            <div className="flex flex-col gap-6">
+              <p className="text-sm text-foreground/70">Your password has been reset successfully.</p>
+              <button type="button" onClick={() => { setResetSuccess(false); setResetToken(""); router.replace('/account'); setAuthMode('login'); }} className="w-full bg-gold text-background py-4 mt-2 font-bold tracking-[0.2em] uppercase hover:bg-foreground transition-colors">
+                Sign In
+              </button>
+            </div>
+          ) : (
+            <form className="flex flex-col gap-6" onSubmit={handleResetPasswordSubmit}>
+              {resetError && <div className="text-red-500 text-xs font-bold bg-red-500/10 p-3 border border-red-500/20">{resetError}</div>}
+              <div className="flex flex-col gap-3 group">
+                <label htmlFor="reset-new-password" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">New Password</label>
+                <input type="password" id="reset-new-password" value={resetNewPassword} onChange={(e) => setResetNewPassword(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" minLength={8} required />
+              </div>
+              <div className="flex flex-col gap-3 group">
+                <label htmlFor="reset-confirm-password" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-light group-focus-within:text-gold transition-colors">Confirm New Password</label>
+                <input type="password" id="reset-confirm-password" value={resetConfirmPassword} onChange={(e) => setResetConfirmPassword(e.target.value)} className="w-full bg-transparent border-b border-foreground/10 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground" minLength={8} required />
+              </div>
+              <button type="submit" disabled={resetLoading} className="w-full bg-gold text-background py-4 mt-4 font-bold tracking-[0.2em] uppercase hover:bg-foreground transition-colors disabled:opacity-50">
+                {resetLoading ? "Resetting..." : "Reset Password"}
+              </button>
+            </form>
+          )}
+        </div>
+        ) : authMode === 'oauth-phone' ? (
         <div className="flex-1 lux-glass-card p-8 md:p-12 relative z-10 border border-foreground/5 bg-foreground/[0.02]">
           <h2 className="text-2xl font-serif text-foreground mb-8 font-bold border-b border-foreground/10 pb-4">Complete Profile</h2>
           <form className="flex flex-col gap-6" onSubmit={handleCompleteOAuth}>
@@ -455,7 +584,7 @@ function AccountContent() {
             </div>
 
             <div className="flex justify-end">
-              <Link href="#" className="text-xs text-foreground/50 hover:text-gold transition-colors">Forgot Password?</Link>
+              <button type="button" onClick={() => { setForgotError(""); setForgotSent(false); setAuthMode('forgot-password'); }} className="text-xs text-foreground/50 hover:text-gold transition-colors">Forgot Password?</button>
             </div>
 
             <button type="submit" disabled={loginLoading} className="w-full bg-gold text-background py-4 mt-4 font-bold tracking-[0.2em] uppercase hover:bg-foreground transition-colors disabled:opacity-50">

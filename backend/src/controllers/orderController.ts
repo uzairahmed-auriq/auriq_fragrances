@@ -175,12 +175,6 @@ export const createOrder = async (req: UserAuthRequest, res: Response): Promise<
       return order;
     });
 
-    // const customerEmail = result.guest_email || '';
-    // const customerName = result.guest_name || 'Valued Customer';
-    // if (customerEmail) 
-    // {
-    //   sendOrderConfirmation(result, customerEmail, customerName).catch(console.error);
-    // }
     res.json({ success: true, data: result });
   } catch (error: any) {
     console.error('Error creating order:', error);

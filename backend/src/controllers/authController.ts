@@ -1,10 +1,13 @@
 import { Request, Response } from 'express'
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import prisma from '../config/database'
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, generateTempToken, verifyTempToken } from '../utils/jwt'
 import { OAuth2Client } from 'google-auth-library'
 import axios from 'axios'
-import { sendOTPEmail, sendWelcomeEmail } from '../services/emailService'
+import { sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../services/emailService'
+
+const hashToken = (token: string) => crypto.createHash('sha256').update(token).digest('hex')
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
@@ -163,12 +166,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
       }
     });
 
-    // Send welcome email asynchronously
-    try {
-      await sendWelcomeEmail(user.email, user.name);
-    } catch(e) {
-      console.error("Welcome email failed", e);
-    }
+    // Send welcome email asynchronously (fire-and-forget, don't block the response)
+    sendWelcomeEmail(user.email, user.name).catch(e => console.error("Welcome email failed", e));
 
     res.json({
       success: true,
@@ -372,7 +371,7 @@ export const completeOAuth = async (req: Request, res: Response) => {
     } else {
       user = await prisma.user.update({
         where: { email },
-        data: { phone, password: hashedPassword }
+        data: { phone, password: hashedPassword, is_email_verified: true }
       });
     }
 
@@ -403,6 +402,77 @@ export const completeOAuth = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('COMPLETE OAUTH ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// POST /api/auth/forgot-password
+export const forgotPassword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      res.status(400).json({ success: false, message: 'Email required' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always respond success so we don't leak which emails are registered
+    if (!user || !user.password) {
+      res.json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
+      return;
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password_reset_token: hashToken(resetToken),
+        password_reset_expiry: new Date(Date.now() + 30 * 60 * 1000)
+      }
+    });
+
+    sendPasswordResetEmail(user.email, user.name, resetToken).catch(e => console.error('Password reset email failed', e));
+
+    res.json({ success: true, message: 'If that email is registered, a reset link has been sent.' });
+  } catch (error) {
+    console.error('FORGOT PASSWORD ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+// POST /api/auth/reset-password
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password || password.length < 8) {
+      res.status(400).json({ success: false, message: 'Token and a password (min 8 chars) are required' });
+      return;
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { password_reset_token: hashToken(token) }
+    });
+
+    if (!user || !user.password_reset_expiry || user.password_reset_expiry < new Date()) {
+      res.status(400).json({ success: false, message: 'Invalid or expired reset link. Please request a new one.' });
+      return;
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword, password_reset_token: null, password_reset_expiry: null }
+    });
+
+    // Invalidate existing sessions so a stolen token/session can't persist past the reset
+    await prisma.refreshToken.deleteMany({ where: { user_id: user.id } });
+
+    res.json({ success: true, message: 'Password reset successfully. Please sign in with your new password.' });
+  } catch (error) {
+    console.error('RESET PASSWORD ERROR:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };

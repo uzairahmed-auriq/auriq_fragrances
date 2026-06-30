@@ -8,12 +8,13 @@ const FROM_SUPPORT = 'Auriq Support <support@auriqfragrances.com>';
 const FROM_MARKETING = 'Auriq Fragrances <marketing@auriqfragrances.com>';
 const FROM_BILLING = 'Auriq Fragrances <billing@auriqfragrances.com>';
 
-import nodemailer from 'nodemailer';
+const WELCOME_DISCOUNT_CODE = 'WELCOME10';
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 // OTP Verification Email
 export const sendOTPEmail = async (email: string, otp: string) => {
-  console.log(`[DEV ONLY] Attempting to send OTP to ${email}: ${otp}`);
-  
   const htmlContent = `
     <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#f5f0e8;">
       <div style="background:#1a1a1a;padding:40px;text-align:center;border-bottom:2px solid #d4af37;">
@@ -30,128 +31,50 @@ export const sendOTPEmail = async (email: string, otp: string) => {
     </div>
   `;
 
-  try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_SUPPORT,
-      to: email,
-      subject: 'Your Auriq Verification Code',
-      html: htmlContent
-    });
+  const { data, error } = await resend.emails.send({
+    from: FROM_SUPPORT,
+    to: email,
+    subject: 'Your Auriq Verification Code',
+    html: htmlContent
+  });
 
-    if (error) {
-      throw new Error(error.message);
-    }
-  } catch (error: any) {
-    console.error('RESEND OTP ERROR:', error.message || error);
-    console.log('Falling back to Nodemailer (Ethereal) for development testing...');
-    
-    try {
-      const testAccount = await nodemailer.createTestAccount();
-      const transporter = nodemailer.createTransport({
-        host: "smtp.ethereal.email",
-        port: 587,
-        secure: false,
-        auth: {
-          user: testAccount.user,
-          pass: testAccount.pass,
-        },
-      });
-
-      const info = await transporter.sendMail({
-        from: '"Auriq Support" <support@auriqfragrances.com>',
-        to: email,
-        subject: 'Your Auriq Verification Code',
-        html: htmlContent,
-      });
-
-      console.log("Fallback email sent! Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    } catch (fallbackError) {
-      console.error('Nodemailer fallback failed:', fallbackError);
-    }
+  if (error) {
+    console.error('RESEND OTP ERROR:', error);
+    throw new Error(error.message);
   }
 };
 
-// Order Confirmation Email
-export const sendOrderConfirmation = async (order: any, email: string, name: string) => {
-  const itemsList = order.items?.map((item: any) =>
-    `<tr>
-      <td style="padding:8px;border-bottom:1px solid #f0e9dc;">${item.item_name} ${item.size_ml ? `(${item.size_ml}ml)` : ''}</td>
-      <td style="padding:8px;border-bottom:1px solid #f0e9dc;text-align:center;">${item.quantity}</td>
-      <td style="padding:8px;border-bottom:1px solid #f0e9dc;text-align:right;">Rs. ${Number(item.unit_price).toLocaleString()}</td>
-    </tr>`
-  ).join('') || '';
+// Password Reset Email
+export const sendPasswordResetEmail = async (email: string, name: string, resetToken: string) => {
+  const resetLink = `${ENV.FRONTEND_URL}/account?resetToken=${resetToken}`;
 
   const { data, error } = await resend.emails.send({
-    from: FROM_SALES,
+    from: FROM_SUPPORT,
     to: email,
-    subject: `Order Confirmed — #AUR-${order.id} | Auriq Fragrances`,
+    subject: 'Reset Your Auriq Password',
     html: `
       <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#0a0a0a;color:#f5f0e8;">
         <div style="background:#1a1a1a;padding:40px;text-align:center;border-bottom:2px solid #d4af37;">
           <h1 style="color:#d4af37;font-size:28px;letter-spacing:4px;margin:0;">AURIQ</h1>
-          <p style="color:#888;font-size:11px;letter-spacing:3px;margin:8px 0 0;">LUXURY FRAGRANCES</p>
         </div>
-        
-        <div style="padding:40px;">
-          <h2 style="color:#d4af37;font-size:20px;letter-spacing:2px;">ORDER CONFIRMED</h2>
+        <div style="padding:40px;text-align:center;">
+          <h2 style="color:#d4af37;font-size:20px;letter-spacing:2px;">RESET YOUR PASSWORD</h2>
           <p style="color:#ccc;">Dear ${name},</p>
-          <p style="color:#ccc;">Thank you for your order. We have received your purchase and it is being processed.</p>
-          
-          <div style="background:#1a1a1a;padding:20px;margin:24px 0;border:1px solid #333;">
-            <p style="color:#888;font-size:12px;letter-spacing:2px;margin:0 0 4px;">ORDER NUMBER</p>
-            <p style="color:#d4af37;font-size:20px;font-weight:bold;margin:0;">#AUR-${order.id}</p>
+          <p style="color:#ccc;">We received a request to reset your password. Click the button below to choose a new one. This link will expire in 30 minutes.</p>
+          <div style="margin:32px 0;">
+            <a href="${resetLink}" style="background:#d4af37;color:#0a0a0a;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:3px;font-weight:bold;">RESET PASSWORD</a>
           </div>
-
-          <table style="width:100%;border-collapse:collapse;margin:24px 0;">
-            <thead>
-              <tr style="background:#1a1a1a;">
-                <th style="padding:10px 8px;text-align:left;color:#888;font-size:11px;letter-spacing:2px;">ITEM</th>
-                <th style="padding:10px 8px;text-align:center;color:#888;font-size:11px;letter-spacing:2px;">QTY</th>
-                <th style="padding:10px 8px;text-align:right;color:#888;font-size:11px;letter-spacing:2px;">PRICE</th>
-              </tr>
-            </thead>
-            <tbody style="color:#ccc;">
-              ${itemsList}
-            </tbody>
-          </table>
-
-          <div style="border-top:1px solid #333;padding-top:16px;">
-            <div style="display:flex;justify-content:space-between;margin:8px 0;">
-              <span style="color:#888;">Shipping</span>
-              <span style="color:#ccc;">Rs. ${Number(order.shipping_fee).toLocaleString()}</span>
-            </div>
-            ${order.discount_amount > 0 ? `<div style="display:flex;justify-content:space-between;margin:8px 0;">
-              <span style="color:#888;">Discount</span>
-              <span style="color:#4ade80;">-Rs. ${Number(order.discount_amount).toLocaleString()}</span>
-            </div>` : ''}
-            <div style="display:flex;justify-content:space-between;margin:16px 0;padding-top:12px;border-top:1px solid #d4af37;">
-              <span style="color:#d4af37;font-size:16px;letter-spacing:2px;">TOTAL</span>
-              <span style="color:#d4af37;font-size:18px;font-weight:bold;">Rs. ${Number(order.total).toLocaleString()}</span>
-            </div>
-          </div>
-
-          <div style="background:#1a1a1a;padding:20px;margin:24px 0;border:1px solid #333;">
-            <p style="color:#888;font-size:11px;letter-spacing:2px;margin:0 0 8px;">DELIVERY ADDRESS</p>
-            <p style="color:#ccc;margin:0;">${order.shipping_name}<br>${order.shipping_street}<br>${order.shipping_city}, ${order.shipping_province}</p>
-          </div>
-
-          <p style="color:#888;font-size:13px;">Payment Method: <span style="color:#ccc;">${order.payment_method}</span></p>
-          
-          <div style="text-align:center;margin:32px 0;">
-            <a href="${ENV.FRONTEND_URL}/invoice/${order.id}" style="background:#d4af37;color:#0a0a0a;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:3px;font-weight:bold;">VIEW INVOICE</a>
-          </div>
+          <p style="color:#888;font-size:12px;">If you didn't request this, you can safely ignore this email — your password will remain unchanged.</p>
         </div>
-
         <div style="background:#1a1a1a;padding:24px;text-align:center;border-top:1px solid #333;">
-          <p style="color:#888;font-size:12px;margin:0;">Questions? Contact us at <a href="mailto:support@auriqfragrances.com" style="color:#d4af37;">support@auriqfragrances.com</a></p>
-          <p style="color:#555;font-size:11px;margin:8px 0 0;">© 2026 Auriq Fragrances. All rights reserved.</p>
+          <p style="color:#555;font-size:11px;margin:0;">© 2026 Auriq Fragrances. All rights reserved.</p>
         </div>
       </div>
     `
   });
 
   if (error) {
-    console.error('RESEND ORDER CONFIRM ERROR:', error);
+    console.error('RESEND PASSWORD RESET ERROR:', error);
     throw new Error(error.message);
   }
 };
@@ -275,7 +198,7 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
           <div style="margin:32px 0;">
             <a href="${ENV.FRONTEND_URL}/collections" style="background:#d4af37;color:#0a0a0a;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:3px;font-weight:bold;">EXPLORE COLLECTIONS</a>
           </div>
-          <p style="color:#888;font-size:13px;">Use code <span style="color:#d4af37;font-weight:bold;">WELCOME10</span> for 10% off your first order.</p>
+          <p style="color:#888;font-size:13px;">Use code <span style="color:#d4af37;font-weight:bold;">${WELCOME_DISCOUNT_CODE}</span> for 10% off your first order.</p>
         </div>
         <div style="background:#1a1a1a;padding:24px;text-align:center;border-top:1px solid #333;">
           <p style="color:#555;font-size:11px;margin:0;">© 2026 Auriq Fragrances. All rights reserved.</p>
@@ -304,7 +227,7 @@ export const sendNewsletterConfirmation = async (email: string) => {
         <div style="padding:40px;text-align:center;">
           <h2 style="color:#d4af37;">YOU ARE SUBSCRIBED</h2>
           <p style="color:#ccc;">Thank you for subscribing to Auriq Fragrances. You will be the first to know about new collections, exclusive offers, and special events.</p>
-          <p style="color:#888;font-size:13px;">Use code <span style="color:#d4af37;font-weight:bold;">WELCOME10</span> for 10% off your first order.</p>
+          <p style="color:#888;font-size:13px;">Use code <span style="color:#d4af37;font-weight:bold;">${WELCOME_DISCOUNT_CODE}</span> for 10% off your first order.</p>
           <div style="margin:32px 0;">
             <a href="${ENV.FRONTEND_URL}/collections" style="background:#d4af37;color:#0a0a0a;padding:14px 32px;text-decoration:none;font-size:12px;letter-spacing:3px;font-weight:bold;">SHOP NOW</a>
           </div>
@@ -324,20 +247,25 @@ export const sendNewsletterConfirmation = async (email: string) => {
 
 // Contact Form Reply — notify admin
 export const sendContactNotification = async (contactData: { name: string; email: string; subject?: string; message: string }) => {
+  const name = escapeHtml(contactData.name);
+  const email = escapeHtml(contactData.email);
+  const subject = escapeHtml(contactData.subject || 'No subject');
+  const message = escapeHtml(contactData.message);
+
   const { data, error } = await resend.emails.send({
     from: FROM_SUPPORT,
     to: 'support@auriqfragrances.com',
-    subject: `New Contact Message from ${contactData.name}`,
+    subject: `New Contact Message from ${name}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
         <h2>New Contact Form Submission</h2>
-        <p><strong>From:</strong> ${contactData.name} (${contactData.email})</p>
-        <p><strong>Subject:</strong> ${contactData.subject || 'No subject'}</p>
+        <p><strong>From:</strong> ${name} (${email})</p>
+        <p><strong>Subject:</strong> ${subject}</p>
         <p><strong>Message:</strong></p>
-        <div style="background:#f5f5f5;padding:16px;border-left:4px solid #d4af37;">
-          ${contactData.message}
+        <div style="background:#f5f5f5;padding:16px;border-left:4px solid #d4af37;white-space:pre-wrap;">
+          ${message}
         </div>
-        <p>Reply directly to: <a href="mailto:${contactData.email}">${contactData.email}</a></p>
+        <p>Reply directly to: <a href="mailto:${email}">${email}</a></p>
       </div>
     `,
     replyTo: contactData.email
