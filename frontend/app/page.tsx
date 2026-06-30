@@ -25,7 +25,7 @@ export default async function Home() {
       
       <main className="flex-1 w-full">
         <FeaturedAds ads={ads} settings={settings} />
-        <Hero ads={ads} settings={settings} />
+        <Hero settings={settings} />
         <FeaturedCollection products={featuredProducts} />
         <OurStory />
         <ContactFeedback />
