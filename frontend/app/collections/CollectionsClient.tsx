@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,6 +49,11 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
     setSearch(searchQuery);
   }, [searchQuery]);
 
+  // Reset to first page whenever filters or sort change
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [search, priceFilters, familyFilters, genderFilters, brandFilters, sortBy]);
+
   const handleSortChange = (val: string) => {
     setSortBy(val);
     setIsSortDropdownOpen(false);
@@ -65,31 +70,27 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
     }
   };
 
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = useMemo(() => products.filter(p => {
     const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || (p.brand || "").toLowerCase().includes(search.toLowerCase());
-
     const price = Number(p.variants?.[0]?.price || 0);
     const matchesPrice = priceFilters.length === 0 || priceFilters.some(label => matchesPriceRange(price, label));
-
     const matchesFamily = familyFilters.length === 0 || familyFilters.some(f => (p.fragrance_type || "").toLowerCase() === f.toLowerCase());
-
     const matchesGender = genderFilters.length === 0 || genderFilters.some(g => (p.gender || "").toLowerCase() === g.toLowerCase());
-
     const matchesBrand = brandFilters.length === 0 || brandFilters.some(b => (p.brand || "").toLowerCase() === b.toLowerCase());
-
     return matchesSearch && matchesPrice && matchesFamily && matchesGender && matchesBrand;
-  });
+  }), [products, search, priceFilters, familyFilters, genderFilters, brandFilters]);
 
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
+  const sortedProducts = useMemo(() => [...filteredProducts].sort((a, b) => {
     const priceA = Number(a.variants?.[0]?.price || 0);
     const priceB = Number(b.variants?.[0]?.price || 0);
-    
     if (sortBy === 'price-low') return priceA - priceB;
     if (sortBy === 'price-high') return priceB - priceA;
     if (sortBy === 'new-arrivals') return b.id - a.id;
     if (sortBy === 'best-sellers') return a.id - b.id;
     return 0;
-  });
+  }), [filteredProducts, sortBy]);
+
+  const visibleProducts = useMemo(() => sortedProducts.slice(0, visibleCount), [sortedProducts, visibleCount]);
 
   const [expandedFilters, setExpandedFilters] = useState({
     price: true,
@@ -272,7 +273,7 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
 
               {/* Grid - 3 columns on desktop since sidebar takes 1/4 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-                {sortedProducts.map((product) => {
+                {visibleProducts.map((product) => {
                   const price = product.variants?.[0]?.price || 0;
                   const imageUrl = product.images?.[0]?.image_url || "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop";
                   return (
