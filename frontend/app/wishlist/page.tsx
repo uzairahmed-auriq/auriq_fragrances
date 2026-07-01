@@ -47,20 +47,18 @@ export default function WishlistPage() {
   }, []);
 
   const handleRemove = async (productId: number) => {
+    // Remove from UI immediately
+    setWishlistItems(prev => prev.filter(item => item.product.id !== productId));
     try {
       const token = localStorage.getItem('auriqAccessToken');
       if (!token) return;
-
-      const res = await apiFetch(`/wishlist/remove/${productId}`, {
+      await apiFetch(`/wishlist/remove/${productId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (res.success) {
-        fetchWishlist();
-      }
     } catch (err) {
-      alert("Failed to remove item from wishlist.");
+      // Revert on failure
+      fetchWishlist();
     }
   };
 

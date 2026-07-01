@@ -53,19 +53,21 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('auriqAccessToken');
-    if (token) {
-      setIsGuest(false);
-      apiFetch('/user/addresses').then((res) => {
-        const addresses = res.data || [];
-        setSavedAddresses(addresses);
-        const def = addresses.find((a: Address) => a.is_default);
-        if (def) setSelectedAddressId(def.id);
-        else if (addresses.length > 0) setSelectedAddressId(addresses[0].id);
-      }).catch(console.error);
-    }
-    miscService.getShippingConfig()
+    // Fetch addresses and shipping config in parallel
+    const addressPromise = token
+      ? apiFetch('/user/addresses').then((res) => {
+          setIsGuest(false);
+          const addresses = res.data || [];
+          setSavedAddresses(addresses);
+          const def = addresses.find((a: Address) => a.is_default);
+          if (def) setSelectedAddressId(def.id);
+          else if (addresses.length > 0) setSelectedAddressId(addresses[0].id);
+        }).catch(console.error)
+      : Promise.resolve();
+    const shippingPromise = miscService.getShippingConfig()
       .then(setShippingConfig)
       .catch(() => setShippingConfig({ flat_fee: "250", free_shipping_above: "5000" }));
+    Promise.all([addressPromise, shippingPromise]);
   }, []);
 
   const flatFee = shippingConfig ? Number(shippingConfig.flat_fee) : 250;
@@ -119,7 +121,7 @@ export default function CheckoutPage() {
       };
 
       const res = await createOrder(orderData);
-      if (res.success) { setOrderId(res.data.id); setIsSuccess(true); await refreshCart(); }
+      if (res.success) { setOrderId(res.data.id); setIsSuccess(true); refreshCart(); }
       else alert(res.message || "Failed to create order");
     } catch (error: any) {
       alert(error.response?.data?.message || "Checkout failed");

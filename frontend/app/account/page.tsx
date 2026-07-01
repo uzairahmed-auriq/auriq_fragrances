@@ -82,30 +82,25 @@ function AccountContent() {
   const [addrDefault, setAddrDefault] = useState(false);
 
   const fetchUserData = async (token: string) => {
-    try {
-      const profileRes = await apiFetch('/user/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (profileRes.success) {
-        setUser(profileRes.data);
-        setProfileName(profileRes.data.name);
-        setProfilePhone(profileRes.data.phone || "");
-        localStorage.setItem('auriqUser', JSON.stringify(profileRes.data));
-      }
-
-      const addressRes = await apiFetch('/user/addresses', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (addressRes.success) {
-        setAddresses(addressRes.data);
-      }
-
-      const ordersRes = await getMyOrders();
-      if (ordersRes.success) {
-        setOrders(ordersRes.data);
-      }
-    } catch (e) {
-      console.error("Failed to fetch user data");
+    // All three are independent — fetch in parallel.
+    // allSettled: if one fails the others still complete (unlike Promise.all which cancels all)
+    const [profileResult, addressResult, ordersResult] = await Promise.allSettled([
+      apiFetch('/user/profile', { headers: { Authorization: `Bearer ${token}` } }),
+      apiFetch('/user/addresses', { headers: { Authorization: `Bearer ${token}` } }),
+      getMyOrders(),
+    ]);
+    if (profileResult.status === 'fulfilled' && profileResult.value.success) {
+      const data = profileResult.value.data;
+      setUser(data);
+      setProfileName(data.name);
+      setProfilePhone(data.phone || "");
+      localStorage.setItem('auriqUser', JSON.stringify(data));
+    }
+    if (addressResult.status === 'fulfilled' && addressResult.value.success) {
+      setAddresses(addressResult.value.data);
+    }
+    if (ordersResult.status === 'fulfilled' && ordersResult.value.success) {
+      setOrders(ordersResult.value.data);
     }
   };
 
