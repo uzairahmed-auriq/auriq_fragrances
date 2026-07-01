@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 
 export default function ProductDetailsClient({ product }: { product: any }) {
   const [quantity, setQuantity] = useState(1);
+  const [cartError, setCartError] = useState<string | null>(null);
+  const [cartLoading, setCartLoading] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'notes' | 'details'>('notes');
@@ -69,13 +71,16 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   };
 
   const handleAddToCart = async () => {
-    if (selectedVariant) {
-      try {
-        await addToCart(selectedVariant.id, undefined, quantity);
-        router.push('/cart');
-      } catch (error) {
-        console.error('Failed to add to cart', error);
-      }
+    if (!selectedVariant) return;
+    setCartLoading(true);
+    setCartError(null);
+    try {
+      await addToCart(selectedVariant.id, undefined, quantity);
+      router.push('/cart');
+    } catch (error: any) {
+      setCartError(error?.message || 'Failed to add to cart. Please try again.');
+    } finally {
+      setCartLoading(false);
     }
   };
 
@@ -193,17 +198,21 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 +
               </button>
             </div>
-            <button 
+            <button
               onClick={handleAddToCart}
-              className="flex-1 bg-gold/90 backdrop-blur-md text-background py-4 px-8 rounded-full font-bold tracking-widest hover:bg-foreground hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all flex items-center justify-center gap-3"
+              disabled={cartLoading || !selectedVariant}
+              className="flex-1 bg-gold/90 backdrop-blur-md text-background py-4 px-8 rounded-full font-bold tracking-widest hover:bg-foreground hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <ShoppingBag className="w-5 h-5" />
-              ADD TO CART
+              {cartLoading ? 'ADDING...' : 'ADD TO CART'}
             </button>
             <button onClick={handleWishlist} disabled={wishlistLoading} className={`p-4 border rounded-full transition-colors lux-glass-card disabled:opacity-50 ${isWishlisted ? "border-gold text-gold bg-gold/10" : "border-foreground/20 text-foreground hover:text-gold hover:border-gold"}`}>
               <Heart className={`w-6 h-6 ${isWishlisted ? "fill-gold" : ""}`} />
             </button>
           </div>
+          {cartError && (
+            <p className="text-red-400 text-sm text-center tracking-wide">{cartError}</p>
+          )}
         </div>
 
         {/* Trust Badges */}

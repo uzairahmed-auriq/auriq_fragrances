@@ -54,8 +54,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const addToCart = async (variantId?: number, bundleId?: number, quantity: number = 1) => {
-    await cartService.addToCart(variantId, bundleId, quantity);
-    refreshCart(); // fire in background — don't block navigation
+    const result = await cartService.addToCart(variantId, bundleId, quantity);
+    // Backend returns the full updated cart — use it directly, no second GET needed
+    if (result?.data?.items) {
+      setCartItems(result.data.items);
+    } else {
+      refreshCart();
+    }
   };
 
   const updateQuantity = async (itemId: number, quantity: number) => {
