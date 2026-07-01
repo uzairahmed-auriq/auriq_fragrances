@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { adminAuthService } from "./services/adminAuthService";
 
 import { adminMessageService } from "./services/adminMessageService";
+import { adminOrderService } from "./services/adminOrderService";
 import { AdminToastProvider } from "./context/AdminToastContext";
 
 export default function AdminLayout({
@@ -16,12 +17,14 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const [hasUnread, setHasUnread] = useState(false);
+  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
 
   useEffect(() => {
     if (adminAuthService.getToken()) {
       adminMessageService.getMessages().then(msgs => {
         setHasUnread(msgs.some((m: any) => !m.is_read));
       }).catch(() => {});
+      adminOrderService.getPendingCount().then(setPendingOrdersCount).catch(() => {});
     }
   }, [pathname]);
 
@@ -162,9 +165,19 @@ export default function AdminLayout({
         <header className="h-20 border-b border-foreground/10 bg-background/50 backdrop-blur-xl flex items-center justify-between px-8 z-10">
           <div className="flex items-center gap-4 flex-1"></div>
           <div className="flex items-center gap-6 relative">
-            <Link href="/admin/messages" aria-label="Messages" className="text-foreground/60 hover:text-gold transition-colors relative">
+            <Link
+              href="/admin/orders"
+              aria-label="Pending Orders"
+              onClick={() => { setPendingOrdersCount(0); setHasUnread(false); }}
+              className="text-foreground/60 hover:text-gold transition-colors relative"
+            >
               <Bell className="w-5 h-5" />
-              {hasUnread && (
+              {pendingOrdersCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 bg-gold text-background text-[10px] font-bold rounded-full flex items-center justify-center px-0.5 leading-none">
+                  {pendingOrdersCount > 99 ? '99+' : pendingOrdersCount}
+                </span>
+              )}
+              {hasUnread && pendingOrdersCount === 0 && (
                 <span className="absolute -top-1 -right-1 w-2 h-2 bg-gold rounded-full"></span>
               )}
             </Link>

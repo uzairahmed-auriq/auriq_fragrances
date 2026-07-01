@@ -245,6 +245,75 @@ export const sendNewsletterConfirmation = async (email: string) => {
   }
 };
 
+// New Order — notify admin
+export const sendNewOrderAdminNotification = async (adminEmail: string, order: any) => {
+  const customerName = order.user?.name || order.guest_name || 'Guest';
+  const customerEmail = order.user?.email || order.guest_email || '—';
+  const customerPhone = order.shipping_phone || order.guest_phone || '—';
+
+  const itemsHtml = (order.items || []).map((item: any) => `
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:10px 8px;font-size:13px;">${escapeHtml(item.item_name || '')}</td>
+      <td style="padding:10px 8px;font-size:13px;text-align:center;">${item.quantity}</td>
+      <td style="padding:10px 8px;font-size:13px;text-align:right;">Rs. ${Number(item.unit_price || 0).toLocaleString()}</td>
+    </tr>
+  `).join('');
+
+  const { error } = await resend.emails.send({
+    from: FROM_SALES,
+    to: adminEmail,
+    subject: `🛍️ New Order #AUR-${order.id} — ${customerName} — Rs. ${Number(order.total || 0).toLocaleString()}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;background:#fff;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+        <div style="background:#0a0a0a;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;">
+          <h1 style="color:#d4af37;font-family:Georgia,serif;font-size:22px;letter-spacing:4px;margin:0;">AURIQ</h1>
+          <span style="background:#d4af37;color:#000;font-size:11px;font-weight:bold;letter-spacing:2px;padding:4px 12px;border-radius:20px;">NEW ORDER</span>
+        </div>
+        <div style="padding:28px 32px;">
+          <h2 style="font-size:18px;margin:0 0 4px;">Order #AUR-${order.id}</h2>
+          <p style="color:#6b7280;font-size:12px;margin:0 0 24px;">Placed just now · Payment: <strong>${order.payment_method}</strong></p>
+
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+            <tr style="background:#f9fafb;border-bottom:2px solid #e5e7eb;">
+              <th style="padding:10px 8px;font-size:11px;text-align:left;letter-spacing:1px;color:#6b7280;">ITEM</th>
+              <th style="padding:10px 8px;font-size:11px;text-align:center;letter-spacing:1px;color:#6b7280;">QTY</th>
+              <th style="padding:10px 8px;font-size:11px;text-align:right;letter-spacing:1px;color:#6b7280;">PRICE</th>
+            </tr>
+            ${itemsHtml}
+            <tr style="border-top:2px solid #d4af37;">
+              <td colspan="2" style="padding:12px 8px;font-weight:bold;">Total</td>
+              <td style="padding:12px 8px;font-weight:bold;text-align:right;color:#d4af37;">Rs. ${Number(order.total || 0).toLocaleString()}</td>
+            </tr>
+          </table>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div style="background:#f9fafb;padding:16px;border-radius:6px;">
+              <p style="font-size:10px;letter-spacing:2px;color:#6b7280;margin:0 0 8px;">CUSTOMER</p>
+              <p style="margin:0;font-size:13px;font-weight:600;">${escapeHtml(customerName)}</p>
+              <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">${escapeHtml(customerEmail)}</p>
+              <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">${escapeHtml(customerPhone)}</p>
+            </div>
+            <div style="background:#f9fafb;padding:16px;border-radius:6px;">
+              <p style="font-size:10px;letter-spacing:2px;color:#6b7280;margin:0 0 8px;">SHIP TO</p>
+              <p style="margin:0;font-size:13px;line-height:1.6;">
+                ${escapeHtml(order.shipping_street || '')}<br/>
+                ${escapeHtml(order.shipping_city || '')}, ${escapeHtml(order.shipping_province || '')}<br/>
+                ${escapeHtml(order.shipping_postal || '')}
+              </p>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;text-align:center;">
+            <a href="${ENV.FRONTEND_URL}/admin/orders" style="background:#d4af37;color:#000;padding:12px 32px;text-decoration:none;font-size:12px;font-weight:bold;letter-spacing:2px;border-radius:4px;display:inline-block;">VIEW IN ADMIN PANEL</a>
+          </div>
+        </div>
+      </div>
+    `
+  });
+
+  if (error) console.error('RESEND NEW ORDER ADMIN NOTIFICATION ERROR:', error);
+};
+
 // Contact Form Reply — notify admin
 export const sendContactNotification = async (contactData: { name: string; email: string; subject?: string; message: string }) => {
   const name = escapeHtml(contactData.name);

@@ -1,5 +1,6 @@
 import { Response } from 'express';
-// email sent when admin confirms order, not on placement
+import { sendNewOrderAdminNotification } from '../services/emailService';
+import { ENV } from '../config/env';
 import prisma from '../config/database';
 import { UserAuthRequest } from '../middleware/authMiddleware';
 
@@ -123,7 +124,7 @@ export const createOrder = async (req: UserAuthRequest, res: Response): Promise<
 
       const city = (shippingAddress.city || "").toLowerCase();
       const isKarachi = city.includes("karachi");
-      const zoneFee = isKarachi ? Number((shippingConfig as any).karachi_fee || 200) : Number((shippingConfig as any).city_to_city_fee || 500);
+      const zoneFee = isKarachi ? Number((shippingConfig as any).karachi_fee || 200) : Number((shippingConfig as any).flat_fee || 250);
       const shippingFee = subtotal >= Number(shippingConfig.free_shipping_above) ? 0 : zoneFee;
       const total = subtotal + shippingFee - discountAmount;
 
@@ -179,6 +180,16 @@ export const createOrder = async (req: UserAuthRequest, res: Response): Promise<
     });
 
     res.json({ success: true, data: result });
+
+    // Fire-and-forget: notify admin of new order (does not block customer response)
+    (async () => {
+      try {
+        const notifyEmail = ENV.ADMIN_NOTIFICATION_EMAIL ||
+          (await prisma.admin.findFirst({ select: { email: true } }))?.email;
+        if (notifyEmail) await sendNewOrderAdminNotification(notifyEmail, result);
+      } catch (e) { console.error('Admin order notification failed:', e); }
+    })();
+
   } catch (error: any) {
     console.error('Error creating order:', error);
     if (error.message && (error.message.includes('Insufficient stock') || error.message.includes('Invalid') || error.message.includes('already used'))) {

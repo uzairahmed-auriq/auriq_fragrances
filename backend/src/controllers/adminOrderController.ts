@@ -51,6 +51,57 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
   }
 };
 
+export const deleteOrder = async (req: Request, res: Response) => {
+  try {
+    const orderId = parseInt(req.params.id as string);
+    if (isNaN(orderId)) {
+      res.status(400).json({ success: false, message: 'Invalid order ID' });
+      return;
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true }
+    });
+
+    if (!order) {
+      res.status(404).json({ success: false, message: 'Order not found' });
+      return;
+    }
+
+    // Restore stock for non-cancelled/delivered orders
+    if (!['CANCELLED', 'DELIVERED'].includes(order.status)) {
+      await prisma.$transaction(
+        order.items
+          .filter(item => item.variant_id !== null)
+          .map(item =>
+            prisma.productVariant.update({
+              where: { id: item.variant_id! },
+              data: { stock_quantity: { increment: item.quantity } }
+            })
+          )
+      );
+    }
+
+    await prisma.order.delete({ where: { id: orderId } });
+
+    res.json({ success: true, message: 'Order deleted' });
+  } catch (error) {
+    console.error('DELETE ORDER ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+export const getPendingOrdersCount = async (req: Request, res: Response) => {
+  try {
+    const count = await prisma.order.count({ where: { status: 'PENDING' } });
+    res.json({ success: true, data: { count } });
+  } catch (error) {
+    console.error('GET PENDING COUNT ERROR:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const [

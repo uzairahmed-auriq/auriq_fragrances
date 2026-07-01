@@ -10,5 +10,14 @@ export const adminOrderService = {
       method: 'PUT',
       body: JSON.stringify({ status }),
     });
+  },
+
+  getPendingCount: async (): Promise<number> => {
+    const res = await adminFetch('/orders/pending-count');
+    return res?.data?.count ?? 0;
+  },
+
+  deleteOrder: async (orderId: number) => {
+    return await adminFetch(`/orders/${orderId}`, { method: 'DELETE' });
   }
 };

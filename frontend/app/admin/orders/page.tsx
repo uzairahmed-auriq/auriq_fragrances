@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Filter, Eye, CheckCircle, Truck, Clock, XCircle, Loader2 } from "lucide-react";
+import { Search, Eye, CheckCircle, Truck, Clock, XCircle, Loader2, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Modal from "../../components/ui/Modal";
 import { adminOrderService } from "../services/adminOrderService";
@@ -40,6 +40,16 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  const handleDeleteOrder = async (order: any) => {
+    if (!confirm(`Delete order AUR-${order.id}? This cannot be undone.`)) return;
+    try {
+      await adminOrderService.deleteOrder(order.id);
+      setOrders(prev => prev.filter(o => o.id !== order.id));
+    } catch (err) {
+      alert("Failed to delete order.");
+    }
+  };
 
   const handleUpdateStatus = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -167,12 +177,19 @@ export default function AdminOrders() {
                       <td className="p-4 text-foreground/80 font-medium">{order.items?.length || 0}</td>
                       <td className="p-4 font-semibold text-foreground text-right">Rs. {Number(order.total).toLocaleString()}</td>
                       <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
                             onClick={() => { setSelectedOrder(order); setIsUpdateModalOpen(true); }}
                             className="text-foreground/50 hover:text-gold transition-colors p-2 bg-foreground/5 rounded-lg flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
                           >
                             <Eye className="w-4 h-4" /> Update
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrder(order)}
+                            className="text-foreground/40 hover:text-red-500 transition-colors p-2 bg-foreground/5 rounded-lg"
+                            title="Delete order"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>

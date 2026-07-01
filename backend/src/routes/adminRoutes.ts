@@ -4,7 +4,7 @@ import { adminLogin } from '../controllers/adminAuthController';
 import { createProduct, getAllProducts, updateProduct, deleteProduct, deleteProductImage, bulkDeleteProducts } from '../controllers/adminProductController';
 import { createCategory, updateCategory } from '../controllers/adminCategoryController';
 import { createAd, getAllAds, deleteAd, toggleAdStatus } from '../controllers/adminAdController';
-import { getAllOrders, updateOrderStatus, getDashboardStats } from '../controllers/adminOrderController';
+import { getAllOrders, updateOrderStatus, getDashboardStats, getPendingOrdersCount, deleteOrder } from '../controllers/adminOrderController';
 import { getAllDiscounts, createDiscount, updateDiscount, deleteDiscount } from '../controllers/adminDiscountController';
 import { verifyAdmin } from '../middleware/authMiddleware';
 
@@ -80,8 +80,10 @@ router.delete('/ads/:id', deleteAd);
 router.put('/ads/:id/status', toggleAdStatus);
 
 // Orders
+router.get('/orders/pending-count', getPendingOrdersCount);
 router.get('/orders', getAllOrders);
 router.put('/orders/:id/status', updateOrderStatus);
+router.delete('/orders/:id', deleteOrder);
 
 // Discounts
 router.get('/discounts', getAllDiscounts);
