@@ -18,6 +18,10 @@ export default function AdminProducts() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
+  const [add50, setAdd50] = useState(false);
+  const [add100, setAdd100] = useState(true);
+  const [edit50, setEdit50] = useState(false);
+  const [edit100, setEdit100] = useState(true);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{
     isOpen: boolean;
     type: 'single' | 'bulk';
@@ -38,9 +42,16 @@ export default function AdminProducts() {
     }
   };
 
+  useEffect(() => { fetchProducts(); }, []);
+
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (editingProduct) {
+      const v50 = editingProduct.variants?.find((v: any) => v.size_ml === 50 && v.is_active !== false);
+      const v100 = editingProduct.variants?.find((v: any) => v.size_ml === 100 && v.is_active !== false);
+      setEdit50(!!v50);
+      setEdit100(!!v100);
+    }
+  }, [editingProduct]);
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
@@ -103,20 +114,16 @@ export default function AdminProducts() {
       formData.append("brand", "Auriq");
       formData.append("is_active", "true");
       
-      // Build variants_json from Price and Stock inputs
-      const price = formData.get("price");
-      const stock = formData.get("stock_quantity");
-      const variant = {
-        size_ml: 100,
-        price: Number(price),
-        stock_quantity: Number(stock),
-        sku: `AQ-${Math.floor(Math.random() * 10000)}`
-      };
-      formData.append("variants_json", JSON.stringify([variant]));
-      
-      // Remove temporary keys before sending to avoid Express confusion
-      formData.delete("price");
-      formData.delete("stock_quantity");
+      const variants = [];
+      if (add50) {
+        variants.push({ size_ml: 50, price: Number(formData.get("price_50")), stock_quantity: Number(formData.get("stock_50")), sku: `AQ-50-${Math.floor(Math.random() * 10000)}` });
+      }
+      if (add100) {
+        variants.push({ size_ml: 100, price: Number(formData.get("price_100")), stock_quantity: Number(formData.get("stock_100")), sku: `AQ-100-${Math.floor(Math.random() * 10000)}` });
+      }
+      if (variants.length === 0) { setError("Enable at least one size option"); setSaving(false); return; }
+      formData.append("variants_json", JSON.stringify(variants));
+      ['price_50','stock_50','price_100','stock_100'].forEach(k => formData.delete(k));
 
       const res = await adminProductService.create(formData);
       if (res.success) {
@@ -141,21 +148,25 @@ export default function AdminProducts() {
     const formData = new FormData(form);
 
     const existingVariants = editingProduct.variants || [];
-    const variants = existingVariants.map((v: any, i: number) => {
-      const sizeVal = formData.get(`variant_size_${i}`) as string;
-      const priceVal = formData.get(`variant_price_${i}`) as string;
-      const stockVal = formData.get(`variant_stock_${i}`) as string;
-      return {
-        id: v.id,
-        size_ml: sizeVal ? Number(sizeVal) : v.size_ml || 100,
-        price: priceVal ? Number(priceVal) : Number(v.price) || 0,
-        stock_quantity: stockVal ? Number(stockVal) : v.stock_quantity || 0,
-        sku: v.sku || `AQ-${Math.floor(Math.random() * 10000)}`
-      };
-    });
+    const find = (ml: number) => existingVariants.find((v: any) => v.size_ml === ml);
+    const variants = [];
+
+    const v50 = find(50);
+    if (edit50) {
+      variants.push({ ...(v50 ? { id: v50.id } : { sku: `AQ-50-${Math.floor(Math.random() * 10000)}` }), size_ml: 50, price: Number(formData.get("price_50")), stock_quantity: Number(formData.get("stock_50")), is_active: true });
+    } else if (v50) {
+      variants.push({ id: v50.id, size_ml: 50, price: Number(v50.price), stock_quantity: v50.stock_quantity, is_active: false });
+    }
+
+    const v100 = find(100);
+    if (edit100) {
+      variants.push({ ...(v100 ? { id: v100.id } : { sku: `AQ-100-${Math.floor(Math.random() * 10000)}` }), size_ml: 100, price: Number(formData.get("price_100")), stock_quantity: Number(formData.get("stock_100")), is_active: true });
+    } else if (v100) {
+      variants.push({ id: v100.id, size_ml: 100, price: Number(v100.price), stock_quantity: v100.stock_quantity, is_active: false });
+    }
+
     formData.append("variants_json", JSON.stringify(variants));
-    formData.delete("price");
-    formData.delete("stock_quantity");
+    ['price_50','stock_50','price_100','stock_100'].forEach(k => formData.delete(k));
 
     const res = await adminProductService.update(editingProduct.id, formData);
     if (res.success) {
@@ -337,19 +348,45 @@ export default function AdminProducts() {
         <input type="number" name="category_id" placeholder="1" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
       </div>
       <div className="flex flex-col gap-2 md:col-span-2">
-        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Variants (Size / Price / Stock)</label>
-        <div className="grid grid-cols-3 gap-3 p-3 border border-foreground/10 rounded-lg">
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Size (ml)</span>
-            <input type="number" name="size_ml" placeholder="100" defaultValue={100} className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+        <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Size Options</label>
+        <div className="flex flex-col gap-3">
+          {/* 50ml */}
+          <div className={`border rounded-lg p-3 transition-colors ${add50 ? 'border-gold/40 bg-gold/5' : 'border-foreground/10'}`}>
+            <label className="flex items-center gap-3 cursor-pointer mb-3">
+              <input type="checkbox" checked={add50} onChange={e => setAdd50(e.target.checked)} className="accent-gold w-4 h-4" />
+              <span className="text-sm font-bold tracking-widest uppercase text-foreground">50ml</span>
+            </label>
+            {add50 && (
+              <div className="grid grid-cols-2 gap-3 pl-7">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Price (Rs.)</span>
+                  <input type="number" name="price_50" placeholder="1500" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Stock</span>
+                  <input type="number" name="stock_50" placeholder="50" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Price (Rs.)</span>
-            <input type="number" name="price" placeholder="2000" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Stock</span>
-            <input type="number" name="stock_quantity" placeholder="50" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+          {/* 100ml */}
+          <div className={`border rounded-lg p-3 transition-colors ${add100 ? 'border-gold/40 bg-gold/5' : 'border-foreground/10'}`}>
+            <label className="flex items-center gap-3 cursor-pointer mb-3">
+              <input type="checkbox" checked={add100} onChange={e => setAdd100(e.target.checked)} className="accent-gold w-4 h-4" />
+              <span className="text-sm font-bold tracking-widest uppercase text-foreground">100ml</span>
+            </label>
+            {add100 && (
+              <div className="grid grid-cols-2 gap-3 pl-7">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Price (Rs.)</span>
+                  <input type="number" name="price_100" placeholder="2000" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Stock</span>
+                  <input type="number" name="stock_100" placeholder="50" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -395,29 +432,68 @@ export default function AdminProducts() {
           <input type="number" name="category_id" defaultValue={editingProduct.category_id} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
         </div>
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Variants (Size / Price / Stock)</label>
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Size Options</label>
           <div className="flex flex-col gap-3">
-            {(editingProduct.variants || [{ size_ml: 100, price: 0, stock_quantity: 0 }]).map((v: any, i: number) => (
-              <div key={i} className="grid grid-cols-3 gap-3 p-3 border border-foreground/10 rounded-lg">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Size (ml)</span>
-                  <input type="number" name={`variant_size_${i}`} defaultValue={v.size_ml} className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" />
+            {/* 50ml */}
+            {(() => {
+              const v50 = (editingProduct.variants || []).find((v: any) => v.size_ml === 50);
+              return (
+                <div className={`border rounded-lg p-3 transition-colors ${edit50 ? 'border-gold/40 bg-gold/5' : 'border-foreground/10'}`}>
+                  <label className="flex items-center gap-3 cursor-pointer mb-3">
+                    <input type="checkbox" checked={edit50} onChange={e => setEdit50(e.target.checked)} className="accent-gold w-4 h-4" />
+                    <span className="text-sm font-bold tracking-widest uppercase text-foreground">50ml</span>
+                  </label>
+                  {edit50 && (
+                    <div className="grid grid-cols-2 gap-3 pl-7">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Price (Rs.)</span>
+                        <input type="number" name="price_50" defaultValue={v50?.price || ''} placeholder="1500" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Stock</span>
+                        <input type="number" name="stock_50" defaultValue={v50?.stock_quantity || ''} placeholder="50" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Price (Rs.)</span>
-                  <input type="number" name={`variant_price_${i}`} defaultValue={v.price} className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" />
+              );
+            })()}
+            {/* 100ml */}
+            {(() => {
+              const v100 = (editingProduct.variants || []).find((v: any) => v.size_ml === 100);
+              return (
+                <div className={`border rounded-lg p-3 transition-colors ${edit100 ? 'border-gold/40 bg-gold/5' : 'border-foreground/10'}`}>
+                  <label className="flex items-center gap-3 cursor-pointer mb-3">
+                    <input type="checkbox" checked={edit100} onChange={e => setEdit100(e.target.checked)} className="accent-gold w-4 h-4" />
+                    <span className="text-sm font-bold tracking-widest uppercase text-foreground">100ml</span>
+                  </label>
+                  {edit100 && (
+                    <div className="grid grid-cols-2 gap-3 pl-7">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Price (Rs.)</span>
+                        <input type="number" name="price_100" defaultValue={v100?.price || ''} placeholder="2000" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Stock</span>
+                        <input type="number" name="stock_100" defaultValue={v100?.stock_quantity || ''} placeholder="50" className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className="text-[10px] text-foreground/40 uppercase tracking-widest">Stock</span>
-                  <input type="number" name={`variant_stock_${i}`} defaultValue={v.stock_quantity} className="bg-transparent border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-gold outline-none text-foreground" />
-                </div>
-              </div>
-            ))}
+              );
+            })()}
           </div>
         </div>
         <div className="flex flex-col gap-2 md:col-span-2">
           <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Description</label>
           <textarea name="description" defaultValue={editingProduct.description} rows={3} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground" required />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Status</label>
+          <select name="is_active" defaultValue={editingProduct.is_active ? "true" : "false"} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
         </div>
         <div className="flex flex-col gap-2 md:col-span-2">
           <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Upload New Images (optional, max 3)</label>
