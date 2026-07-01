@@ -184,6 +184,7 @@ export const updateProduct = async (req: Request, res: Response) => {
               price: v.price,
               discount_price: v.discount_price || null,
               stock_quantity: v.stock_quantity,
+              is_active: v.is_active !== undefined ? Boolean(v.is_active) : true,
             }
           })
         } else {

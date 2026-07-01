@@ -39,7 +39,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     })
     .catch(() => {});
 }, [product.id]);
-  const [selectedVariant, setSelectedVariant] = useState(product.variants?.[0] || null);
+  const activeVariants = (product.variants || []).filter((v: any) => v.is_active !== false);
+  const [selectedVariant, setSelectedVariant] = useState(activeVariants[0] || null);
   const price = selectedVariant ? (selectedVariant.discount_price || selectedVariant.price) : 0;
   const originalPrice = selectedVariant?.price;
   
@@ -152,20 +153,19 @@ export default function ProductDetailsClient({ product }: { product: any }) {
         </div>
 
         {/* Size Selector */}
-        {product.variants && product.variants.length > 1 && (
+        {activeVariants.length > 1 && (
           <div className="mb-8">
             <span className="text-xs font-bold tracking-[0.3em] uppercase text-foreground/50 mb-4 block">Select Size</span>
             <div className="flex flex-wrap gap-3">
-              {product.variants.map((variant: any) => (
+              {activeVariants.map((variant: any) => (
                 <button
                   key={variant.id}
-                  onClick={() => setSelectedVariant(variant)}
+                  onClick={() => variant.stock_quantity > 0 && setSelectedVariant(variant)}
                   className={`px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase border transition-all ${
                     selectedVariant?.id === variant.id
                       ? 'border-gold bg-gold/10 text-gold'
                       : 'border-foreground/20 text-foreground/60 hover:border-gold/50'
-                  } ${!variant.is_active || variant.stock_quantity === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
-                  disabled={!variant.is_active || variant.stock_quantity === 0}
+                  } ${variant.stock_quantity === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
                   {variant.size_ml}ml
                   {variant.stock_quantity === 0 && <span className="ml-1 text-red-400">(Out)</span>}
