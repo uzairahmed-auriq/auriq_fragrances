@@ -46,10 +46,11 @@ export default function CheckoutPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [street, setStreet] = useState("");
-  const [city, setCity] = useState("");
+  const [cityType, setCityType] = useState<'karachi' | 'other'>('karachi');
+  const [city, setCity] = useState("Karachi");
   const [postalCode, setPostalCode] = useState("");
   const [province, setProvince] = useState("Sindh");
-  const [shippingConfig, setShippingConfig] = useState<{ flat_fee: string; free_shipping_above: string } | null>(null);
+  const [shippingConfig, setShippingConfig] = useState<{ flat_fee: string; karachi_fee?: string; free_shipping_above: string } | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('auriqAccessToken');
@@ -70,9 +71,21 @@ export default function CheckoutPage() {
     Promise.all([addressPromise, shippingPromise]);
   }, []);
 
-  const flatFee = shippingConfig ? Number(shippingConfig.flat_fee) : 250;
+  const karachiFee = shippingConfig?.karachi_fee ? Number(shippingConfig.karachi_fee) : 200;
+  const cityToCity = shippingConfig ? Number(shippingConfig.flat_fee) : 250;
   const freeAbove = shippingConfig ? Number(shippingConfig.free_shipping_above) : 5000;
-  const shippingFee = cartTotal >= freeAbove ? 0 : flatFee;
+
+  // Determine shipping zone
+  const getIsKarachi = (): boolean => {
+    if (!isGuest && selectedAddressId) {
+      const addr = savedAddresses.find((a: Address) => a.id === selectedAddressId);
+      return addr?.city?.trim().toLowerCase() === 'karachi';
+    }
+    return cityType === 'karachi';
+  };
+  const isKarachi = getIsKarachi();
+  const baseFee = isKarachi ? karachiFee : cityToCity;
+  const shippingFee = cartTotal >= freeAbove ? 0 : baseFee;
   const discountAmount = appliedDiscount?.discountAmount || 0;
   const total = cartTotal + shippingFee - discountAmount;
 
@@ -224,8 +237,34 @@ export default function CheckoutPage() {
                             <input id="street" type="text" required value={street} onChange={(e) => setStreet(e.target.value)} placeholder="Street address, P.O. box, etc." className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide" />
                           </div>
                           <div className="flex flex-col gap-2 group">
-                            <label htmlFor="city" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">City</label>
-                            <input id="city" type="text" required value={city} onChange={(e) => setCity(e.target.value)} className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide" />
+                            <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">
+                              City
+                              {cityType === 'karachi'
+                                ? <span className="ml-2 text-gold">· Rs. {karachiFee} delivery</span>
+                                : <span className="ml-2 text-foreground/40">· Rs. {cityToCity} delivery</span>}
+                            </label>
+                            <select
+                              value={cityType}
+                              onChange={(e) => {
+                                const val = e.target.value as 'karachi' | 'other';
+                                setCityType(val);
+                                setCity(val === 'karachi' ? 'Karachi' : '');
+                              }}
+                              className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors text-foreground font-medium tracking-wide appearance-none"
+                            >
+                              <option value="karachi" className="bg-background">Karachi</option>
+                              <option value="other" className="bg-background">Other City</option>
+                            </select>
+                            {cityType === 'other' && (
+                              <input
+                                type="text"
+                                required
+                                value={city}
+                                onChange={(e) => setCity(e.target.value)}
+                                placeholder="Enter your city"
+                                className="bg-transparent border-b border-foreground/20 py-2 text-sm focus:outline-none focus:border-gold transition-colors placeholder:text-foreground/20 text-foreground font-medium tracking-wide mt-1"
+                              />
+                            )}
                           </div>
                           <div className="flex flex-col gap-2 group">
                             <label htmlFor="postalCode" className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-medium group-focus-within:text-gold transition-colors">Postal Code</label>

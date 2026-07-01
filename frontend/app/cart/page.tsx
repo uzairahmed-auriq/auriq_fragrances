@@ -20,10 +20,10 @@ export default function CartPage() {
       .catch(() => setShippingConfig({ flat_fee: "250", free_shipping_above: "5000" }));
   }, []);
 
-  const flatFee = shippingConfig ? Number(shippingConfig.flat_fee) : 250;
   const freeAbove = shippingConfig ? Number(shippingConfig.free_shipping_above) : 5000;
-  const shipping = cartTotal >= freeAbove ? 0 : flatFee;
-  const total = cartTotal + shipping;
+  const isFreeShipping = cartTotal >= freeAbove;
+  // Can't determine Karachi vs City-to-City without an address — calculated at checkout
+  const total = cartTotal;
 
   return (
     <>
@@ -158,16 +158,18 @@ export default function CartPage() {
                     <div className="flex justify-between items-center text-foreground/70">
                       <span>Shipping</span>
                       <span className="text-foreground">
-                        {shipping === 0 ? <span className="text-gold uppercase text-[10px] tracking-widest font-bold">Free</span> : formatPrice(shipping)}
+                        {isFreeShipping
+                          ? <span className="text-gold uppercase text-[10px] tracking-widest font-bold">Free</span>
+                          : <span className="text-[10px] text-foreground/50 uppercase tracking-widest">Calculated at checkout</span>}
                       </span>
                     </div>
                   </div>
 
                   <div className="border-t border-foreground/10 pt-6 flex justify-between items-end">
-                    <span className="text-foreground uppercase tracking-[0.2em] font-bold text-xs">Total</span>
+                    <span className="text-foreground uppercase tracking-[0.2em] font-bold text-xs">Subtotal</span>
                     <div className="flex flex-col items-end">
                       <span className="text-foreground text-3xl font-serif font-bold tracking-wide">{formatPrice(total)}</span>
-                      <span className="text-[10px] text-foreground/40 mt-1 tracking-widest">INCLUDES TAXES</span>
+                      <span className="text-[10px] text-foreground/40 mt-1 tracking-widest">+ SHIPPING AT CHECKOUT</span>
                     </div>
                   </div>
 
