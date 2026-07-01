@@ -54,13 +54,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const addToCart = async (variantId?: number, bundleId?: number, quantity: number = 1) => {
-    try {
-      await cartService.addToCart(variantId, bundleId, quantity);
-      await refreshCart();
-    } catch (error) {
-      console.error('Failed to add to cart', error);
-      throw error;
-    }
+    await cartService.addToCart(variantId, bundleId, quantity);
+    refreshCart(); // fire in background — don't block navigation
   };
 
   const updateQuantity = async (itemId: number, quantity: number) => {
