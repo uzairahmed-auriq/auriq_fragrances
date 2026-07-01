@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: "Auriq | Essence In Motion",
   description: "A premium fragrance experience crafted for those who appreciate elegance, sophistication, and timeless luxury.",
   icons: {
-    icon: "/icon.svg",
+    icon: "/favicon-small.png",
   },
   openGraph: {
     title: "Auriq | Essence In Motion",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
     siteName: "Auriq",
     images: [
       {
-        url: "/icon.svg",
-        width: 800,
-        height: 600,
+        url: "/icon.png",
+        width: 553,
+        height: 553,
       },
     ],
     locale: "en_US",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Auriq | Essence In Motion",
     description: "A premium fragrance experience crafted for those who appreciate elegance, sophistication, and timeless luxury.",
-    images: ["/icon.svg"],
+    images: ["/icon.png"],
   },
 };
 

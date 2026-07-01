@@ -47,6 +47,7 @@ export default function OurStory() {
                     src={image2}
                     alt={subtitle}
                     fill
+                    sizes="(max-width: 768px) 55vw, 30vw"
                     className="object-cover opacity-90 transition-all duration-[2000ms] group-hover:scale-110 group-hover:opacity-100"
                   />
                   {/* Elegant overlay mask */}

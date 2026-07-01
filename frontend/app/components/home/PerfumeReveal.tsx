@@ -1,20 +1,17 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { useScrollProgress } from "../../hooks/useScrollProgress";
-// 200 particles for a massive, full-screen mist explosion
-const PARTICLES = Array.from({ length: 200 }, (_, i) => {
-  // Full 360-degree massive burst to cover the entire viewport
-  const baseAngle = -180 + (i * 1.8); 
+const PARTICLES = Array.from({ length: 50 }, (_, i) => {
+  const baseAngle = -180 + (i * 7.2); // 360° / 50 = 7.2° between each particle
   const jitter = (i % 5 === 0) ? 30 : (i % 5 === 1) ? -30 : (i % 5 === 2) ? 15 : -15;
   return {
     id: i,
     angle: baseAngle + jitter,
-    // Massive distance to push particles all the way to the edges of the screen
-    distance: 50 + (i % 20) * 75,   // 50px to 1475px travel distance
-    size: 2.5 + (i % 4),            // larger mist drops (2.5px - 5.5px)
-    opacity: 0.5 + (i % 10) * 0.05, // highly visible (0.5 - 0.95)
+    distance: 50 + (i % 20) * 75,
+    size: 2.5 + (i % 4),
+    opacity: 0.5 + (i % 10) * 0.05,
   };
 });
 
@@ -146,7 +143,7 @@ export default function PerfumeReveal() {
   return (
     <section
       ref={sectionRef}
-      style={{ height: "1200vh", position: "relative" }}
+      style={{ height: "500vh", position: "relative" }}
       className="bg-perfume-main"
     >
       <div
