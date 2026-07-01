@@ -64,22 +64,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateQuantity = async (itemId: number, quantity: number) => {
+    // Update UI immediately — no waiting for network
+    setCartItems(prev => prev.map(item => item.id === itemId ? { ...item, quantity } : item));
     try {
       await cartService.updateCartItem(itemId, quantity);
-      await refreshCart();
     } catch (error) {
-      console.error('Failed to update quantity', error);
-      throw error;
+      // Revert to server state on failure
+      refreshCart();
     }
   };
 
   const removeItem = async (itemId: number) => {
+    // Remove from UI immediately
+    setCartItems(prev => prev.filter(item => item.id !== itemId));
     try {
       await cartService.removeFromCart(itemId);
-      await refreshCart();
     } catch (error) {
-      console.error('Failed to remove item', error);
-      throw error;
+      // Revert to server state on failure
+      refreshCart();
     }
   };
 
