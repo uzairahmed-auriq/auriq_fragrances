@@ -53,7 +53,8 @@ app.use(express.urlencoded({ extended: true }))
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes)
-app.use('/api/admin', authLimiter, adminRoutes)
+app.use('/api/admin/login', authLimiter) // strict limit only on login
+app.use('/api/admin', generalLimiter, adminRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/ads', adRoutes)
