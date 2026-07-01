@@ -246,13 +246,14 @@ export default function AdminProducts() {
                   <th className="p-4 font-bold">Category ID</th>
                   <th className="p-4 font-bold">Price (Base)</th>
                   <th className="p-4 font-bold">Stock</th>
+                  <th className="p-4 font-bold">Status</th>
                   <th className="p-4 font-bold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-12 text-foreground/50 text-sm">
+                    <td colSpan={7} className="text-center py-12 text-foreground/50 text-sm">
                       No products found. Add a product to get started!
                     </td>
                   </tr>
@@ -292,6 +293,11 @@ export default function AdminProducts() {
                             'bg-red-500/10 text-red-500'}`}
                         >
                           {baseVariant.stock_quantity > 0 ? `${baseVariant.stock_quantity} in stock` : 'Out of stock'}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${product.is_active ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-400'}`}>
+                          {product.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
                       <td className="p-4 text-right">
