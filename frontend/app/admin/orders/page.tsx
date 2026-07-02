@@ -4,8 +4,10 @@ import { Search, Eye, CheckCircle, Truck, Clock, XCircle, Loader2, Trash2 } from
 import { useState, useEffect } from "react";
 import Modal from "../../components/ui/Modal";
 import { adminOrderService } from "../services/adminOrderService";
+import { useAdminToast } from "../context/AdminToastContext";
 
 export default function AdminOrders() {
+  const { success, error: toastError } = useAdminToast();
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   
@@ -46,8 +48,9 @@ export default function AdminOrders() {
     try {
       await adminOrderService.deleteOrder(order.id);
       setOrders(prev => prev.filter(o => o.id !== order.id));
+      success("Order deleted successfully.");
     } catch (err) {
-      alert("Failed to delete order.");
+      toastError("Failed to delete order.");
     }
   };
 
@@ -64,11 +67,12 @@ export default function AdminOrders() {
       if (res.success) {
         setIsUpdateModalOpen(false);
         fetchOrders();
+        success("Order status updated.");
       } else {
-        alert(res.message || "Failed to update status");
+        toastError(res.message || "Failed to update status");
       }
     } catch (err) {
-      alert("Error updating order status.");
+      toastError("Error updating order status.");
     } finally {
       setUpdating(false);
     }

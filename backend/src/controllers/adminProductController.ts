@@ -51,17 +51,41 @@ export const createProduct = async (req: Request, res: Response) => {
     });
 
     if (variants_json) {
-      const variants = JSON.parse(variants_json);
+      let variants: any[];
+      try {
+        variants = JSON.parse(variants_json);
+      } catch {
+        res.status(400).json({ success: false, message: 'Invalid variants format' });
+        return;
+      }
+      if (!Array.isArray(variants) || variants.length === 0) {
+        res.status(400).json({ success: false, message: 'At least one variant is required' });
+        return;
+      }
       for (const v of variants) {
-         await prisma.productVariant.create({
-           data: {
-             product_id: product.id,
-             size_ml: v.size_ml,
-             price: v.price,
-             stock_quantity: v.stock_quantity,
-             sku: v.sku
-           }
-         });
+        if (!v.size_ml || v.price === undefined || v.stock_quantity === undefined) {
+          res.status(400).json({ success: false, message: 'Each variant must have size_ml, price, and stock_quantity' });
+          return;
+        }
+        if (isNaN(Number(v.price)) || Number(v.price) <= 0) {
+          res.status(400).json({ success: false, message: 'Variant price must be a positive number' });
+          return;
+        }
+        if (isNaN(Number(v.stock_quantity)) || Number(v.stock_quantity) < 0) {
+          res.status(400).json({ success: false, message: 'Variant stock quantity must be 0 or more' });
+          return;
+        }
+      }
+      for (const v of variants) {
+        await prisma.productVariant.create({
+          data: {
+            product_id: product.id,
+            size_ml: v.size_ml,
+            price: v.price,
+            stock_quantity: v.stock_quantity,
+            sku: v.sku
+          }
+        });
       }
     }
 
@@ -97,7 +121,7 @@ export const getAllProducts = async (req: Request, res: Response) => {
         include: {
           category: true,
           variants: true,
-          images: true,
+          images: { take: 1, orderBy: { sort_order: 'asc' } },
           fragrance_notes: true,
         },
         skip: (page - 1) * limit,
@@ -186,7 +210,31 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     // Update variants if provided
     if (variants_json) {
-      const variants = JSON.parse(variants_json)
+      let variants: any[];
+      try {
+        variants = JSON.parse(variants_json);
+      } catch {
+        res.status(400).json({ success: false, message: 'Invalid variants format' });
+        return;
+      }
+      if (!Array.isArray(variants) || variants.length === 0) {
+        res.status(400).json({ success: false, message: 'At least one variant is required' });
+        return;
+      }
+      for (const v of variants) {
+        if (!v.size_ml || v.price === undefined || v.stock_quantity === undefined) {
+          res.status(400).json({ success: false, message: 'Each variant must have size_ml, price, and stock_quantity' });
+          return;
+        }
+        if (isNaN(Number(v.price)) || Number(v.price) <= 0) {
+          res.status(400).json({ success: false, message: 'Variant price must be a positive number' });
+          return;
+        }
+        if (isNaN(Number(v.stock_quantity)) || Number(v.stock_quantity) < 0) {
+          res.status(400).json({ success: false, message: 'Variant stock quantity must be 0 or more' });
+          return;
+        }
+      }
       for (const v of variants) {
         if (v.id) {
           // Update existing variant — include product_id to prevent cross-product mutation

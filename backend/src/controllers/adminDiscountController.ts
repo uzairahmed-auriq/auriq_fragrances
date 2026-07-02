@@ -19,7 +19,12 @@ export const createDiscount = async (req: AdminAuthRequest, res: Response): Prom
   try {
     const { code, type, value, min_order, max_uses, is_active, expires_at } = req.body;
 
-    const existing = await prisma.discountCode.findUnique({ where: { code } });
+    if (!code || !/^[A-Z0-9]{3,20}$/.test(code.toUpperCase())) {
+      res.status(400).json({ success: false, message: 'Discount code must be 3–20 letters/numbers only (e.g. SAVE10)' });
+      return;
+    }
+
+    const existing = await prisma.discountCode.findUnique({ where: { code: code.toUpperCase() } });
     if (existing) {
       res.status(400).json({ success: false, message: 'Discount code already exists' });
       return;

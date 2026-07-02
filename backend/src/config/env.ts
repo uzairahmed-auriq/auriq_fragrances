@@ -13,4 +13,5 @@ export const ENV = {
   RESEND_API_KEY: process.env.RESEND_API_KEY!,
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
   ADMIN_NOTIFICATION_EMAIL: process.env.ADMIN_NOTIFICATION_EMAIL || '',
+  MARKETING_EMAIL: process.env.MARKETING_EMAIL || 'marketing@auriqfragrances.com',
 }

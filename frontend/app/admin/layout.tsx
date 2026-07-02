@@ -79,18 +79,17 @@ export default function AdminLayout({
     }
   }, [pathname, router]);
 
-  // 15-minute inactivity timeout
+  // 60-minute inactivity timeout
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
 
     const resetTimer = () => {
       clearTimeout(timeoutId);
-      // 15 minutes = 15 * 60 * 1000 = 900000 ms
       timeoutId = setTimeout(() => {
         if (pathname !== '/admin/login' && adminAuthService.getToken()) {
           adminAuthService.logout();
         }
-      }, 900000);
+      }, 3600000); // 60 minutes
     };
 
     if (isAuthenticated && pathname !== '/admin/login') {

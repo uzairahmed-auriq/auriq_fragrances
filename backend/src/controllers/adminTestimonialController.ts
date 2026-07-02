@@ -21,6 +21,12 @@ export const createTestimonial = async (req: AdminAuthRequest, res: Response) =>
     const { customer_name, content, rating, is_featured, is_approved } = req.body;
     const adminId = req.admin!.id;
 
+    const ratingNum = Number(rating);
+    if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+      res.status(400).json({ success: false, message: 'Rating must be a whole number between 1 and 5' });
+      return;
+    }
+
     const testimonial = await prisma.testimonial.create({
       data: {
         customer_name,
@@ -44,6 +50,14 @@ export const updateTestimonial = async (req: AdminAuthRequest, res: Response) =>
     const { id } = req.params;
     const { customer_name, content, rating, is_featured, is_approved } = req.body;
     const adminId = req.admin!.id;
+
+    if (rating !== undefined) {
+      const ratingNum = Number(rating);
+      if (!Number.isInteger(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+        res.status(400).json({ success: false, message: 'Rating must be a whole number between 1 and 5' });
+        return;
+      }
+    }
 
     const existing = await prisma.testimonial.findUnique({ where: { id: parseInt(id as string) } });
 

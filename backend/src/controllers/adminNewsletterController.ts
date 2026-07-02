@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { logAdminAction } from '../utils/auditLog';
+import { ENV } from '../config/env';
 
 export const getSubscribers = async (req: Request, res: Response) => {
   try {
@@ -61,7 +62,8 @@ export const deleteSubscriber = async (req: Request, res: Response) => {
 export const exportSubscribersCSV = async (req: Request, res: Response) => {
   try {
     const subscribers = await prisma.newsletterSubscriber.findMany({
-      orderBy: { subscribed_at: 'desc' }
+      orderBy: { subscribed_at: 'desc' },
+      take: 10000
     });
 
     // Create CSV content
@@ -109,7 +111,7 @@ export const sendCampaign = async (req: Request, res: Response) => {
     for (const sub of subscribers) {
       try {
         await resend.emails.send({
-          from: 'Auriq Fragrances <marketing@auriqfragrances.com>',
+          from: `Auriq Fragrances <${ENV.MARKETING_EMAIL}>`,
           to: sub.email,
           subject,
           html: `

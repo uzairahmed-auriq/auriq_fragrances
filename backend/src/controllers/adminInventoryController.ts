@@ -22,7 +22,8 @@ export const getInventory = async (req: Request, res: Response) => {
       const all = await prisma.productVariant.findMany({
         where: { ...baseWhere, stock_quantity: { gt: 0 } },
         include: { product: { select: { name: true, brand: true, is_active: true } } },
-        orderBy: { stock_quantity: 'asc' }
+        orderBy: { stock_quantity: 'asc' },
+        take: 1000
       });
 
       const lowStock = all.filter(v => v.stock_quantity <= v.low_stock_alert);

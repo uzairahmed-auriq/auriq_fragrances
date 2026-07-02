@@ -54,9 +54,17 @@ export default function AdminProducts() {
     }
   }, [editingProduct]);
 
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = !categoryFilter || p.category_id.toString() === categoryFilter;
+    const matchesType = !typeFilter || p.fragrance_type === typeFilter;
+    const matchesStatus = !statusFilter || (statusFilter === "active" ? p.is_active : !p.is_active);
+    return matchesSearch && matchesCategory && matchesType && matchesStatus;
+  });
+
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      setSelectedIds(products.map(p => p.id));
+      setSelectedIds(filteredProducts.map(p => p.id));
     } else {
       setSelectedIds([]);
     }
@@ -275,7 +283,7 @@ export default function AdminProducts() {
                     <input 
                       type="checkbox" 
                       className="accent-gold w-4 h-4 rounded border-foreground/30 cursor-pointer" 
-                      checked={products.length > 0 && selectedIds.length === products.length}
+                      checked={filteredProducts.length > 0 && filteredProducts.every(p => selectedIds.includes(p.id))}
                       onChange={handleSelectAll}
                     />
                   </th>
@@ -294,13 +302,7 @@ export default function AdminProducts() {
                       No products found. Add a product to get started!
                     </td>
                   </tr>
-                ) : products.filter(p => {
-                    const matchesSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
-                    const matchesCategory = !categoryFilter || p.category_id.toString() === categoryFilter;
-                    const matchesType = !typeFilter || p.fragrance_type === typeFilter;
-                    const matchesStatus = !statusFilter || (statusFilter === "active" ? p.is_active : !p.is_active);
-                    return matchesSearch && matchesCategory && matchesType && matchesStatus;
-                  }).map((product) => {
+                ) : filteredProducts.map((product) => {
                   const baseVariant = product.variants?.[0] || { price: 0, stock_quantity: 0 };
                   const imageUrl = product.images?.[0]?.image_url || "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop";
                   
