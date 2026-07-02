@@ -5,8 +5,10 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import Modal from "../../components/ui/Modal";
 import { adminProductService } from "../services/adminProductService";
+import { useAdminToast } from "../context/AdminToastContext";
 
 export default function AdminProducts() {
+  const { success: toastSuccess, error: toastError } = useAdminToast();
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -89,22 +91,29 @@ export default function AdminProducts() {
     try {
       setIsDeleting(true);
       if (deleteConfirmation.type === 'single' && deleteConfirmation.id) {
-        const res = await adminProductService.delete(deleteConfirmation.id);
+        const deletedId = deleteConfirmation.id;
+        const res = await adminProductService.delete(deletedId);
         if (res.success) {
-          setProducts(products.filter(p => p.id !== deleteConfirmation.id));
-          setSelectedIds(prev => prev.filter(item => item !== deleteConfirmation.id));
+          setDeleteConfirmation({ isOpen: false, type: 'single' });
+          setProducts(prev => prev.filter(p => p.id !== deletedId));
+          toastSuccess(res.message || "Product deleted.");
+        } else {
+          toastError(res.message || "Failed to delete product.");
         }
       } else if (deleteConfirmation.type === 'bulk') {
-        const res = await adminProductService.bulkDelete(selectedIds);
+        const deletedIds = [...selectedIds];
+        const res = await adminProductService.bulkDelete(deletedIds);
         if (res.success) {
-          setProducts(products.filter(p => !selectedIds.includes(p.id)));
           setSelectedIds([]);
+          setDeleteConfirmation({ isOpen: false, type: 'single' });
+          setProducts(prev => prev.filter(p => !deletedIds.includes(p.id)));
+          toastSuccess(res.message || `${deletedIds.length} products deleted.`);
+        } else {
+          toastError(res.message || "Failed to delete products.");
         }
       }
-      setDeleteConfirmation({ isOpen: false, type: 'single' });
-    } catch (err) {
-      console.error(err);
-      setError("Failed to delete product(s)");
+    } catch (err: any) {
+      toastError(err?.message || "Failed to delete product(s).");
     } finally {
       setIsDeleting(false);
     }

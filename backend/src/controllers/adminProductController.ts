@@ -297,17 +297,33 @@ export const deleteProduct = async (req: Request, res: Response) => {
       return
     }
 
-    // Soft delete — just set is_active to false
-    await prisma.product.update({
-      where: { id: parseInt(id) },
-      data: { is_active: false }
+    // Check if any order items reference this product's variants
+    const variants = await prisma.productVariant.findMany({
+      where: { product_id: parseInt(id) },
+      select: { id: true }
     })
+    const variantIds = variants.map(v => v.id)
 
-    await revalidateFrontend('products')
+    const orderedCount = variantIds.length > 0
+      ? await prisma.orderItem.count({ where: { variant_id: { in: variantIds } } })
+      : 0
 
-    await logAdminAction((req as any).admin.id, 'DELETE_PRODUCT', 'Product', existing.id, existing, { is_active: false });
-
-    res.json({ success: true, message: 'Product deleted successfully' })
+    if (orderedCount > 0) {
+      // Has order history — soft delete to preserve records
+      await prisma.product.update({
+        where: { id: parseInt(id) },
+        data: { is_active: false }
+      })
+      await revalidateFrontend('products')
+      await logAdminAction((req as any).admin.id, 'DELETE_PRODUCT', 'Product', existing.id, existing, { is_active: false });
+      res.json({ success: true, message: 'Product deactivated (has existing orders — hidden from store)' })
+    } else {
+      // No orders — permanently delete (cascades to variants, images, notes)
+      await prisma.product.delete({ where: { id: parseInt(id) } })
+      await revalidateFrontend('products')
+      await logAdminAction((req as any).admin.id, 'DELETE_PRODUCT', 'Product', existing.id, existing, null);
+      res.json({ success: true, message: 'Product permanently deleted' })
+    }
   } catch (error) {
     console.error('DELETE PRODUCT ERROR:', error)
     res.status(500).json({ success: false, message: 'Server error' })
@@ -325,17 +341,48 @@ export const bulkDeleteProducts = async (req: Request, res: Response) => {
 
     const intIds = ids.map(id => parseInt(id));
 
-    // Soft delete all specified products
-    await prisma.product.updateMany({
-      where: { id: { in: intIds } },
-      data: { is_active: false }
+    // Find all variant IDs for these products and check order references
+    const variants = await prisma.productVariant.findMany({
+      where: { product_id: { in: intIds } },
+      select: { id: true, product_id: true }
     });
+    const variantIds = variants.map(v => v.id);
+
+    const orderedVariantIds = variantIds.length > 0
+      ? (await prisma.orderItem.findMany({
+          where: { variant_id: { in: variantIds } },
+          select: { variant_id: true },
+          distinct: ['variant_id']
+        })).map(oi => oi.variant_id as number)
+      : [];
+
+    const orderedProductIds = new Set(
+      variants.filter(v => orderedVariantIds.includes(v.id)).map(v => v.product_id)
+    );
+
+    const toDeactivate = intIds.filter(id => orderedProductIds.has(id));
+    const toDelete = intIds.filter(id => !orderedProductIds.has(id));
+
+    if (toDeactivate.length > 0) {
+      await prisma.product.updateMany({
+        where: { id: { in: toDeactivate } },
+        data: { is_active: false }
+      });
+    }
+    if (toDelete.length > 0) {
+      await prisma.product.deleteMany({ where: { id: { in: toDelete } } });
+    }
 
     await revalidateFrontend('products');
+    await logAdminAction((req as any).admin.id, 'BULK_DELETE_PRODUCTS', 'Product', 0, null, { deleted: toDelete, deactivated: toDeactivate });
 
-    await logAdminAction((req as any).admin.id, 'BULK_DELETE_PRODUCTS', 'Product', 0, null, { deleted_ids: intIds, is_active: false });
+    const msg = toDeactivate.length > 0 && toDelete.length > 0
+      ? `${toDelete.length} deleted, ${toDeactivate.length} deactivated (have existing orders)`
+      : toDeactivate.length > 0
+        ? `${toDeactivate.length} product(s) deactivated (have existing orders)`
+        : `${toDelete.length} product(s) permanently deleted`;
 
-    res.json({ success: true, message: 'Products deleted successfully' });
+    res.json({ success: true, message: msg });
   } catch (error) {
     console.error('BULK DELETE PRODUCTS ERROR:', error);
     res.status(500).json({ success: false, message: 'Server error' });
