@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Trash2, ShoppingBag, Check } from "lucide-react";
+import { Heart, ShoppingBag, Check } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { apiFetch } from "../utils/api";
@@ -14,6 +14,7 @@ export default function WishlistPage() {
   const [wishlistItems, setWishlistItems] = useState<any[]>([]);
   const [addingId, setAddingId] = useState<number | null>(null);
   const [addedId, setAddedId] = useState<number | null>(null);
+  const [togglingIds, setTogglingIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -46,19 +47,26 @@ export default function WishlistPage() {
     fetchWishlist();
   }, []);
 
-  const handleRemove = async (productId: number) => {
+  const handleRemoveWishlist = async (productId: number) => {
+    if (togglingIds.includes(productId)) return;
+    setTogglingIds(prev => [...prev, productId]);
+    
     // Remove from UI immediately
     setWishlistItems(prev => prev.filter(item => item.product.id !== productId));
+    
     try {
       const token = localStorage.getItem('auriqAccessToken');
       if (!token) return;
+      
       await apiFetch(`/wishlist/remove/${productId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-    } catch (err) {
+    } catch (err: any) {
       // Revert on failure
       fetchWishlist();
+    } finally {
+      setTogglingIds(prev => prev.filter(id => id !== productId));
     }
   };
 
@@ -120,10 +128,11 @@ export default function WishlistPage() {
                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       <button 
-                        onClick={(e) => { e.preventDefault(); handleRemove(product.id); }}
-                        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/50 backdrop-blur-md flex items-center justify-center text-foreground hover:bg-red-500 hover:text-white transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
+                        onClick={(e) => { e.preventDefault(); handleRemoveWishlist(product.id); }}
+                        disabled={togglingIds.includes(product.id)}
+                        className={`absolute top-4 right-4 w-10 h-10 rounded-full bg-background/50 backdrop-blur-md flex items-center justify-center text-foreground hover:bg-background/80 transition-all opacity-100 ${togglingIds.includes(product.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Heart className="w-5 h-5 fill-red-500 text-red-500" />
                       </button>
                     </Link>
                     

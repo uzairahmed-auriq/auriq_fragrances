@@ -27,8 +27,12 @@ const ProductCardActions = memo(function ProductCardActions({ productId, variant
         await wishlistService.addToWishlist(productId);
         setWishlisted(true);
       }
-    } catch (err) {
-      console.error('Wishlist error', err);
+    } catch (err: any) {
+      if (err?.message === 'Product already in wishlist') {
+        setWishlisted(true);
+      } else {
+        console.error('Wishlist error', err);
+      }
     } finally {
       setWishlistLoading(false);
     }

@@ -8,7 +8,7 @@ export default function OurStory() {
   const title = "The Auriq Standard";
   const paragraph1 = "Sourced from the finest ingredients worldwide, ensuring an unparalleled olfactory experience. 100% genuine products crafted by master perfumers with a rich heritage in scent making.";
   const paragraph2 = "Complimentary express shipping on all orders, delivered in pristine condition to your doorstep. Dedicated concierge service ready to assist you in finding your perfect signature scent.";
-  const image1 = "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?q=80&w=2787&auto=format&fit=crop";
+  const image1 = "/homepage.png";
   const image2 = null;
 
   return (

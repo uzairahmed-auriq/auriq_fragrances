@@ -63,8 +63,12 @@ export default function ProductDetailsClient({ product }: { product: any }) {
         await apiFetch('/wishlist/add', { method: 'POST', body: JSON.stringify({ product_id: product.id }) });
         setIsWishlisted(true);
       }
-    } catch (err) {
-      console.error('Wishlist error', err);
+    } catch (err: any) {
+      if (err?.message === 'Product already in wishlist') {
+        setIsWishlisted(true);
+      } else {
+        console.error('Wishlist error', err);
+      }
     } finally {
       setWishlistLoading(false);
     }
