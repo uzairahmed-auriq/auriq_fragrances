@@ -9,6 +9,68 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import ProductCardActions from "../components/home/ProductCardActions";
 
+const CollectionProductCard = ({ product }: { product: any }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const images = product.images?.length > 0 ? product.images : [{ image_url: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop" }];
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isHovered && images.length > 1) {
+      interval = setInterval(() => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, 3000);
+    } else {
+      setCurrentImageIndex(0);
+    }
+    return () => clearInterval(interval);
+  }, [isHovered, images.length]);
+
+  const price = product.variants?.[0]?.price || 0;
+  const currentImage = images[currentImageIndex]?.image_url;
+
+  return (
+    <div 
+      className="group relative flex flex-col lux-glass-card p-5"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="flex flex-col h-full">
+        <Link href={`/products/${product.id}`} className="block relative aspect-[4/5] overflow-hidden rounded-xl mb-6 bg-background z-10 shadow-2xl transform-gpu backface-hidden">
+          {images.map((img: any, idx: number) => (
+            <Image
+              key={idx}
+              src={img.image_url}
+              alt={`${product.name} - ${idx + 1}`}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className={`object-cover transition-all duration-1000 ease-in-out transform-gpu will-change-transform will-change-opacity ${
+                idx === currentImageIndex 
+                  ? 'opacity-90 group-hover:opacity-100 group-hover:scale-110 z-10' 
+                  : 'opacity-0 group-hover:scale-110 z-0'
+              }`}
+            />
+          ))}
+          <div className="absolute inset-0 z-20 pointer-events-none">
+            <div className="pointer-events-auto h-full w-full">
+              <ProductCardActions productId={product.id} variantId={product.variants?.[0]?.id} />
+            </div>
+          </div>
+        </Link>
+
+        <div className="flex flex-col text-center relative z-10 px-2">
+          <span className="text-[10px] text-gold uppercase tracking-[0.2em] mb-3 font-bold">{product.brand || 'Auriq'}</span>
+          <Link href={`/products/${product.id}`}>
+            <h3 className="font-serif text-xl text-foreground mb-2 font-bold drop-shadow-md hover:text-gold transition-colors">{product.name}</h3>
+          </Link>
+          <span className="text-foreground/80 text-sm tracking-wide font-medium">Rs. {Number(price).toLocaleString()}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function CollectionsClient({ initialProducts }: { initialProducts: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -307,33 +369,9 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
 
               {/* Grid - 3 columns on desktop since sidebar takes 1/4 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
-                {visibleProducts.map((product) => {
-                  const price = product.variants?.[0]?.price || 0;
-                  const imageUrl = product.images?.[0]?.image_url || "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=2787&auto=format&fit=crop";
-                  return (
-                    <div key={product.id} className="group relative flex flex-col lux-glass-card p-5">
-                      <div className="flex flex-col h-full">
-                        <Link href={`/products/${product.id}`} className="block relative aspect-[4/5] overflow-hidden rounded-xl mb-6 bg-background z-10 shadow-2xl">
-                          <Image
-                            src={imageUrl}
-                            alt={product.name}
-                            fill
-                            className="object-cover opacity-90 transition-all duration-700 group-hover:scale-110 group-hover:opacity-100"
-                          />
-                          <ProductCardActions productId={product.id} variantId={product.variants?.[0]?.id} />
-                        </Link>
-
-                        <div className="flex flex-col text-center relative z-10 px-2">
-                          <span className="text-[10px] text-gold uppercase tracking-[0.2em] mb-3 font-bold">{product.brand || 'Auriq'}</span>
-                          <Link href={`/products/${product.id}`}>
-                            <h3 className="font-serif text-xl text-foreground mb-2 font-bold drop-shadow-md hover:text-gold transition-colors">{product.name}</h3>
-                          </Link>
-                          <span className="text-foreground/80 text-sm tracking-wide font-medium">Rs. {Number(price).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {visibleProducts.map((product) => (
+                  <CollectionProductCard key={product.id} product={product} />
+                ))}
               </div>
               
               {/* Pagination */}

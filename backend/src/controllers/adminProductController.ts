@@ -199,6 +199,7 @@ export const updateProduct = async (req: Request, res: Response) => {
         ...(gender && { gender }),
         ...(uploadedImages.length > 0 && {
           images: {
+            deleteMany: {},
             create: uploadedImages.map((url, index) => ({
               image_url: url,
               sort_order: index
