@@ -58,6 +58,11 @@ export const updatePassword = async (req: UserAuthRequest, res: Response) => {
     const userId = req.user!.id;
     const { currentPassword, newPassword } = req.body;
 
+    if (!newPassword || newPassword.length < 8) {
+      res.status(400).json({ success: false, message: 'New password must be at least 8 characters long' });
+      return;
+    }
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.password) {
       res.status(400).json({ success: false, message: 'Password update not available' });
@@ -76,7 +81,10 @@ export const updatePassword = async (req: UserAuthRequest, res: Response) => {
       data: { password: hashedPassword }
     });
 
-    res.json({ success: true, message: 'Password updated successfully' });
+    // Invalidate all other sessions so a stolen/old refresh token can't survive the change
+    await prisma.refreshToken.deleteMany({ where: { user_id: userId } });
+
+    res.json({ success: true, message: 'Password updated successfully. Please sign in again.' });
   } catch (error) {
     console.error('UPDATE PASSWORD ERROR:', error);
     res.status(500).json({ success: false, message: 'Server error' });

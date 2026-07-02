@@ -2,6 +2,9 @@ import rateLimit from 'express-rate-limit'
 import helmet from 'helmet'
 
 // Rate limiters
+// NOTE: these use the default in-memory store, which is correct for a single backend
+// instance. If you ever scale horizontally (2+ instances behind a load balancer),
+// switch to a shared store (e.g. rate-limit-redis) so counts are enforced globally.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -102,28 +105,25 @@ app.get('/', (req, res) => {
 app.use(errorHandler)
 
 import prisma from './config/database'
+import { runSchemaSync } from './scripts/syncSchema'
 
 app.listen(ENV.PORT, async () => {
-  try {
-    console.log('Running auto-migrations for session_id...');
-    await prisma.$executeRawUnsafe(`ALTER TABLE orders ADD COLUMN IF NOT EXISTS session_id TEXT;`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE carts ADD COLUMN IF NOT EXISTS session_id TEXT;`);
-    await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS carts_session_id_key ON carts(session_id);`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS carts_session_id_idx ON carts(session_id);`);
-    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS orders_session_id_idx ON orders(session_id);`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE product_images ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE ads ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE gallery_images ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verify_token_expires TIMESTAMP;`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;`);
-    await prisma.$executeRawUnsafe(`ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS low_stock_alert INTEGER DEFAULT 5;`);
-    console.log('Auto-migration complete.');
-  } catch (error) {
-    console.error('Auto-migration failed:', error);
+  // In development, keep the schema patches automatic for convenience.
+  // In production, run `npm run db:sync` ONCE at deploy instead — this avoids
+  // running DDL on every boot and prevents races when multiple instances start.
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      console.log('Running schema sync (dev)...');
+      await runSchemaSync();
+      console.log('Schema sync complete.');
+    } catch (error) {
+      console.error('Schema sync failed:', error);
+    }
   }
   console.log(`Server running on port ${ENV.PORT}`)
 })
-// Keep Neon DB alive by pinging every 4 minutes
+// Keep Neon DB alive by pinging every 2 minutes (Neon free tier suspends after ~5 min idle).
+// Harmless to leave on once you upgrade Neon / disable auto-suspend.
 setInterval(async () => {
   try {
     await prisma.$queryRaw`SELECT 1`;
