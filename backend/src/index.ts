@@ -14,6 +14,22 @@ const generalLimiter = rateLimit({
   message: { success: false, message: 'Too many requests, please slow down' }
 })
 
+// Baseline limiter applied to ALL /api traffic (stops scraping/abuse; generous for real browsing)
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please slow down' }
+})
+
+// Strict limiter for endpoints that send emails (contact, newsletter) to prevent quota abuse
+const strictEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many requests. Please try again later.' }
+})
+
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
@@ -36,6 +52,10 @@ dotenv.config()
 
 const app = express()
 
+// Trust the first proxy (Railway/Render/Vercel/Nginx) so rate limiting and IP logging
+// use the real client IP from X-Forwarded-For instead of the proxy's IP.
+app.set('trust proxy', 1)
+
 // Middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow images/fonts served from this API
@@ -50,6 +70,13 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+
+// Baseline rate limit on all API traffic
+app.use('/api', globalLimiter)
+
+// Strict limit on the email-sending public endpoints (before the misc routes handle them)
+app.use('/api/contact', strictEmailLimiter)
+app.use('/api/newsletter/subscribe', strictEmailLimiter)
 
 // Routes
 app.use('/api/auth', authLimiter, authRoutes)

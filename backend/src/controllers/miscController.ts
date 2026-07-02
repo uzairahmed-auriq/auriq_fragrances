@@ -6,8 +6,9 @@ import { UserAuthRequest } from '../middleware/authMiddleware'
 export const subscribeNewsletter = async (req: Request, res: Response) => {
   try {
     const { email } = req.body
-    if (!email) {
-      res.status(400).json({ success: false, message: 'Email required' })
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email || typeof email !== 'string' || !emailRegex.test(email)) {
+      res.status(400).json({ success: false, message: 'A valid email is required' })
       return
     }
     await prisma.newsletterSubscriber.upsert({
