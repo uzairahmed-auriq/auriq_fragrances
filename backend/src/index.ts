@@ -63,12 +63,17 @@ app.set('trust proxy', 1)
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow images/fonts served from this API
 }))
+// Allowed origins: the known production domains plus whatever FRONTEND_URL is set to
+// (so a changed domain or preview URL works without a code change).
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://auriqfragrances.com',
+  'https://www.auriqfragrances.com',
+  ENV.FRONTEND_URL,
+].filter(Boolean)
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://auriqfragrances.com',
-    'https://www.auriqfragrances.com',
-  ],
+  origin: allowedOrigins,
   credentials: true
 }))
 app.use(express.json())
