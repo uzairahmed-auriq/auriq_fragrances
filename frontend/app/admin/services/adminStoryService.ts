@@ -3,7 +3,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 const getHeaders = () => {
   let token = '';
   if (typeof window !== 'undefined') {
-    token = localStorage.getItem('adminToken') || '';
+    token = sessionStorage.getItem('adminToken') || '';
   }
   return {
     'Authorization': `Bearer ${token}`

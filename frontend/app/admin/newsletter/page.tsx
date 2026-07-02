@@ -41,7 +41,7 @@ export default function NewsletterPage() {
 
   const handleExport = async () => {
     try {
-      const token = localStorage.getItem('adminToken');
+      const token = sessionStorage.getItem('adminToken');
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/newsletters/export`, {
         headers: { Authorization: `Bearer ${token}` }
       });
