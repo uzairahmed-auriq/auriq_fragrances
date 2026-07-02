@@ -52,7 +52,24 @@ export const adminLogin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
-    const admin = await prisma.admin.findUnique({ where: { email } });
+    // Retry on DB cold-start — Neon free tier takes ~10s to wake from sleep
+    let admin;
+    const maxAttempts = 6;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        admin = await prisma.admin.findUnique({ where: { email } });
+        break;
+      } catch (dbErr: any) {
+        const isConnectionError = dbErr?.code === 'P1001' ||
+          dbErr?.message?.includes("Can't reach database server") ||
+          dbErr?.constructor?.name === 'PrismaClientInitializationError';
+        if (isConnectionError && attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, 2500));
+        } else {
+          throw dbErr;
+        }
+      }
+    }
     if (!admin) {
       res.status(401).json({ success: false, message: 'Invalid credentials' });
       return;

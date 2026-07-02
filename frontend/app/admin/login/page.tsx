@@ -18,12 +18,17 @@ export default function AdminLogin() {
     setError("");
 
     try {
+      // Backend retries internally on DB cold-start (~15s), so this may take a moment
       const res = await adminAuthService.login(email, password);
       if (res.success) {
         router.push("/admin/products");
       }
     } catch (err: any) {
-      setError(err.message || "Login failed");
+      if (err.message === 'Server error') {
+        setError("The database is starting up. Please wait a moment and try again.");
+      } else {
+        setError(err.message || "Login failed");
+      }
     } finally {
       setLoading(false);
     }
