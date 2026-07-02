@@ -34,7 +34,7 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
     }
   };
 
-  if (!products || products.length === 0) return null;
+  if (!products || products.length === 0 || settings.FEATURED_ENABLED === 'false') return null;
 
   const title = settings.FEATURED_TITLE || "Featured Collections";
   const subtitle = settings.FEATURED_SUBTITLE || "";
