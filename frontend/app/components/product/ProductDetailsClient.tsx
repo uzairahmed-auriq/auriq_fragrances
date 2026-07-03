@@ -164,64 +164,68 @@ export default function ProductDetailsClient({ product }: { product: any }) {
           )}
         </div>
 
-        {/* Size Selector */}
-        {activeVariants.length > 1 && (
-          <div className="mb-8">
-            <span className="text-xs font-bold tracking-[0.3em] uppercase text-foreground/50 mb-4 block">Select Size</span>
-            <div className="flex flex-wrap gap-3">
-              {activeVariants.map((variant: any) => (
-                <button
-                  key={variant.id}
-                  onClick={() => variant.stock_quantity > 0 && setSelectedVariant(variant)}
-                  className={`px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase border transition-all ${
-                    selectedVariant?.id === variant.id
-                      ? 'border-gold bg-gold/10 text-gold'
-                      : 'border-foreground/20 text-foreground/60 hover:border-gold/50'
-                  } ${variant.stock_quantity === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  {variant.size_ml}ml
-                  {variant.stock_quantity === 0 && <span className="ml-1 text-red-400">(Out)</span>}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Size Selector + Quantity */}
+        <div className="mb-8">
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            {/* Sizes on the left */}
+            {activeVariants.length > 1 ? (
+              <div>
+                <span className="text-xs font-bold tracking-[0.3em] uppercase text-foreground/50 mb-3 block">Select Size</span>
+                <div className="flex flex-wrap gap-3">
+                  {activeVariants.map((variant: any) => (
+                    <button
+                      key={variant.id}
+                      onClick={() => variant.stock_quantity > 0 && setSelectedVariant(variant)}
+                      className={`px-5 py-2 rounded-full text-xs font-bold tracking-widest uppercase border transition-all ${
+                        selectedVariant?.id === variant.id
+                          ? 'border-gold bg-gold/10 text-gold'
+                          : 'border-foreground/20 text-foreground/60 hover:border-gold/50'
+                      } ${variant.stock_quantity === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                    >
+                      {variant.size_ml}ml
+                      {variant.stock_quantity === 0 && <span className="ml-1 text-red-400">(Out)</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : <div />}
 
-        {/* Quantity & Add to Cart */}
-        <div className="flex flex-col gap-6 mb-12">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-            {/* Quantity — on top on mobile, on the left on desktop */}
-            <div className="flex justify-center sm:justify-start">
+            {/* Quantity on the right */}
+            <div>
+              <span className="text-xs font-bold tracking-[0.3em] uppercase text-foreground/50 mb-3 block text-right">Qty</span>
               <div className="flex items-center border border-foreground/20 rounded-full lux-glass-card">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-5 py-3 text-foreground hover:text-gold transition-colors"
+                  className="px-4 py-2 text-foreground hover:text-gold transition-colors"
                 >
                   -
                 </button>
-                <span className="w-8 text-center text-foreground font-bold">{quantity}</span>
+                <span className="w-6 text-center text-foreground font-bold text-sm">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="px-5 py-3 text-foreground hover:text-gold transition-colors"
+                  className="px-4 py-2 text-foreground hover:text-gold transition-colors"
                 >
                   +
                 </button>
               </div>
             </div>
-            {/* Add to Cart + Wishlist — beneath the quantity on mobile, on the right on desktop */}
-            <div className="flex items-center gap-4 sm:flex-1">
-              <button
-                onClick={handleAddToCart}
-                disabled={cartLoading || !selectedVariant}
-                className="flex-1 bg-gold/90 backdrop-blur-md text-background py-4 px-8 rounded-full font-bold tracking-widest hover:bg-foreground hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <ShoppingBag className="w-5 h-5" />
-                {cartLoading ? 'ADDING...' : 'ADD TO CART'}
-              </button>
-              <button onClick={handleWishlist} disabled={wishlistLoading} className={`p-4 border rounded-full transition-colors lux-glass-card disabled:opacity-50 ${isWishlisted ? "border-gold text-gold bg-gold/10" : "border-foreground/20 text-foreground hover:text-gold hover:border-gold"}`}>
-                <Heart className={`w-6 h-6 ${isWishlisted ? "fill-gold" : ""}`} />
-              </button>
-            </div>
+          </div>
+        </div>
+
+        {/* Add to Cart */}
+        <div className="flex flex-col gap-6 mb-12">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleAddToCart}
+              disabled={cartLoading || !selectedVariant}
+              className="flex-1 bg-gold/90 backdrop-blur-md text-background py-4 px-8 rounded-full font-bold tracking-widest hover:bg-foreground hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {cartLoading ? 'ADDING...' : 'ADD TO CART'}
+            </button>
+            <button onClick={handleWishlist} disabled={wishlistLoading} className={`p-4 border rounded-full transition-colors lux-glass-card disabled:opacity-50 ${isWishlisted ? "border-gold text-gold bg-gold/10" : "border-foreground/20 text-foreground hover:text-gold hover:border-gold"}`}>
+              <Heart className={`w-6 h-6 ${isWishlisted ? "fill-gold" : ""}`} />
+            </button>
           </div>
           {cartError && (
             <p className="text-red-400 text-sm text-center tracking-wide">{cartError}</p>
