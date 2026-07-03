@@ -1,14 +1,14 @@
 import Link from "next/link";
 import Image from "next/image";
-import NewsletterForm from "../newsletter/NewsletterForm";
+import FooterNewsletter from "./FooterNewsletter";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#050505] pt-20 pb-10 border-t border-white/5">
+    <footer className="bg-[#050505] pt-8 pb-10 lg:pt-20 border-t border-white/5">
       <div className="container-lux">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4 lg:gap-12 mb-10 lg:mb-16">
           {/* Column 1: Company Info */}
-          <div>
+          <div className="col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-6">
               <Image src="/icon.svg" alt="Auriq Logo" width={48} height={48} className="w-12 h-12 object-cover rounded-full bg-white/5" />
               <h3 className="text-2xl font-serif tracking-widest font-bold text-white">AURIQ</h3>
@@ -40,13 +40,9 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 4: Newsletter */}
-          <div>
-            <h4 className="font-serif text-lg mb-6 text-white">Newsletter</h4>
-            <p className="text-gray-300 text-sm mb-4">
-              Subscribe to receive updates, access to exclusive deals, and more.
-            </p>
-            <NewsletterForm />
+          {/* Column 4: Newsletter — dropdown on mobile, expanded on desktop */}
+          <div className="col-span-2 lg:col-span-1">
+            <FooterNewsletter />
           </div>
         </div>
 
