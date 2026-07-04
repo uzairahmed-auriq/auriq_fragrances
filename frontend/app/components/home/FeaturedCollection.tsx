@@ -40,14 +40,14 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
   const subtitle = settings.FEATURED_SUBTITLE || "";
 
   return (
-    <section className="py-24 bg-perfume-main relative overflow-hidden" id="collection">
+    <section className="py-12 md:py-24 bg-perfume-main relative overflow-hidden" id="collection">
       {/* Noise texture for matte finish */}
       <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
       
       <div className="container-lux relative z-10">
-        <div className="flex justify-between items-end mb-16 border-b border-foreground/5 pb-6">
+        <div className="flex justify-between items-end mb-8 md:mb-16 border-b border-foreground/5 pb-6">
           <div>
-            <h2 className="text-3xl md:text-5xl font-serif text-gradient-gold font-bold tracking-wide">{title}</h2>
+            <h2 className="text-2xl md:text-5xl font-serif text-gradient-gold font-bold tracking-wide">{title}</h2>
             {subtitle && (
               <p className="mt-4 text-sm text-foreground/70 max-w-2xl">{subtitle}</p>
             )}
@@ -58,7 +58,7 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
         </div>
 
         {/* Carousel Container */}
-        <div className="relative w-full overflow-hidden [--slide-width:100%] sm:[--slide-width:50%] lg:[--slide-width:25%]">
+        <div className="relative w-full overflow-hidden [--slide-width:50%] lg:[--slide-width:25%]">
           <div 
             className="flex -mx-4"
             style={{ 
@@ -72,28 +72,28 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
               const imageUrl = product.images?.[0]?.image_url || "https://images.unsplash.com/photo-1595425970377-c9703cc48a7e?q=80&w=2800&auto=format&fit=crop";
 
               return (
-                <div key={`${product.id}-${idx}`} className="w-full sm:w-1/2 lg:w-1/4 flex-shrink-0 px-4">
-                  <div className="group relative flex flex-col lux-glass-card p-6 h-full">
+                <div key={`${product.id}-${idx}`} className="w-1/2 lg:w-1/4 flex-shrink-0 px-2 sm:px-4">
+                  <div className="group relative flex flex-col lux-glass-card p-3 sm:p-6 h-full">
                     <div className="flex flex-col h-full">
                       {/* Image Container with elegant hover zoom */}
-                      <Link href={`/products/${product.slug || product.id}`} className="block relative aspect-[4/5] overflow-hidden rounded-xl mb-6 z-10 bg-background shadow-2xl">
+                      <Link href={`/products/${product.slug || product.id}`} className="block relative aspect-[4/5] overflow-hidden rounded-xl mb-3 sm:mb-6 z-10 bg-background shadow-2xl">
                         <Image
                           src={imageUrl}
                           alt={product.name}
                           fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1200px) 50vw, 25vw"
                           className="object-cover opacity-90 transition-all duration-700 group-hover:scale-110 group-hover:opacity-100"
                         />
                         <ProductCardActions productId={product.id} />
                       </Link>
 
                       {/* Product Info - Minimalist typography */}
-                      <div className="flex flex-col text-center relative z-10 px-4 mt-auto">
-                        <span className="text-[10px] text-gold uppercase tracking-[0.2em] mb-3 font-bold">{product.brand}</span>
+                      <div className="flex flex-col text-center relative z-10 px-1 sm:px-4 mt-auto">
+                        <span className="text-[9px] sm:text-[10px] text-gold uppercase tracking-[0.2em] mb-1 sm:mb-3 font-bold">{product.brand}</span>
                         <Link href={`/products/${product.slug || product.id}`}>
-                          <h3 className="font-serif text-xl text-foreground mb-2 font-bold drop-shadow-md hover:text-gold transition-colors line-clamp-1">{product.name}</h3>
+                          <h3 className="font-serif text-sm sm:text-xl text-foreground mb-1 sm:mb-2 font-bold drop-shadow-md hover:text-gold transition-colors line-clamp-1 leading-tight">{product.name}</h3>
                         </Link>
-                        <span className="text-foreground/80 text-sm tracking-wide font-medium">Rs. {parseFloat(price).toLocaleString()}</span>
+                        <span className="text-foreground/80 text-xs sm:text-sm tracking-wide font-medium">Rs. {parseFloat(price).toLocaleString()}</span>
                       </div>
                     </div>
                   </div>

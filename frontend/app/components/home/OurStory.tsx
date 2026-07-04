@@ -12,7 +12,7 @@ export default function OurStory() {
   const image2 = null;
 
   return (
-    <section className="py-32 bg-perfume-main relative overflow-hidden" id="story">
+    <section className="py-12 md:py-32 bg-perfume-main relative overflow-hidden" id="story">
       {/* Subtle top structural line */}
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-foreground/10 to-transparent"></div>
       
@@ -20,10 +20,10 @@ export default function OurStory() {
       <div className="absolute inset-0 bg-noise opacity-30 pointer-events-none"></div>
       
       <div className="container-lux relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24 items-center">
           
-          {/* Left: Images */}
-          <div className="relative w-full max-w-md mx-auto lg:max-w-none h-[450px] md:h-[550px] lg:h-[650px]">
+          {/* Left: Images — shown below text on mobile, left on desktop */}
+          <div className="relative w-full max-w-md mx-auto lg:max-w-none h-[260px] sm:h-[380px] md:h-[550px] lg:h-[650px] order-2 lg:order-1">
             {/* Primary Image (Image 1) */}
             <div className={`absolute ${image2 ? 'top-0 left-0 w-[80%] h-[80%]' : 'inset-0 w-full h-full'} group overflow-hidden p-2 lux-glass-card rounded-xl z-10 transition-all duration-700`}>
               <div className="relative w-full h-full rounded-lg overflow-hidden shadow-2xl">
@@ -57,8 +57,8 @@ export default function OurStory() {
             )}
           </div>
 
-          {/* Right: Story Content */}
-          <div className="flex flex-col mt-12 lg:mt-0">
+          {/* Right: Story Content — shown first on mobile, right on desktop */}
+          <div className="flex flex-col mt-0 lg:mt-0 order-1 lg:order-2">
             <span className="text-gold text-xs tracking-[0.3em] uppercase mb-4 block font-bold drop-shadow-sm">{subtitle}</span>
             <h2 className="text-3xl md:text-5xl font-serif text-gradient-gold mb-8 font-bold tracking-wide leading-tight drop-shadow-md">
               {title}

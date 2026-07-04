@@ -60,7 +60,7 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
             priority
           />
         </div>
-        <div className="relative w-[400px] md:w-[500px] lg:w-[600px] h-[60px] md:h-[80px] lg:h-[100px] -mt-2 md:-mt-6 mb-6">
+        <div className="relative w-[260px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-[44px] sm:h-[60px] md:h-[80px] lg:h-[100px] -mt-2 md:-mt-6 mb-6">
           <Image 
             src="/Essence_in_motion.png" 
             alt={subtitle || "Essence In Motion"}
