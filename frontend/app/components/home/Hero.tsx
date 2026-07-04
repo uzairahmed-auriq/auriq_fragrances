@@ -1,19 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import PromotionalCards from "./PromotionalCards";
 
 export default function Hero({ settings = {} }: { settings?: Record<string, string> }) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
 
   const title = settings.HERO_TITLE || "AURIQ";
   const subtitle = settings.HERO_SUBTITLE || `"Essence In Motion"`;
@@ -29,7 +20,7 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
     <section id="hero" className="relative min-h-screen w-full flex flex-col justify-center overflow-hidden pt-10">
       {/* Background Video/Image with Overlay */}
       <div className="absolute inset-0 z-0">
-        {!isMobile && videoUrl ? (
+        {videoUrl ? (
           <video
             autoPlay
             muted

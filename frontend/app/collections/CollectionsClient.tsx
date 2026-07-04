@@ -32,7 +32,7 @@ const CollectionProductCard = ({ product }: { product: any }) => {
 
   return (
     <div
-      className="group relative flex flex-col lux-glass-card p-3 sm:p-5"
+      className="group relative flex flex-col lux-glass-card p-3 sm:p-5 active:scale-[0.98] transition-transform duration-150"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

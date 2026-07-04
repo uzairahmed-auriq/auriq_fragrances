@@ -73,7 +73,7 @@ export default function FeaturedCollection({ products = [] }: { products?: any[]
 
               return (
                 <div key={`${product.id}-${idx}`} className="w-1/2 lg:w-1/4 flex-shrink-0 px-2 sm:px-4">
-                  <div className="group relative flex flex-col lux-glass-card p-3 sm:p-6 h-full">
+                  <div className="group relative flex flex-col lux-glass-card p-3 sm:p-6 h-full active:scale-[0.98] transition-transform duration-150">
                     <div className="flex flex-col h-full">
                       {/* Image Container with elegant hover zoom */}
                       <Link href={`/products/${product.slug || product.id}`} className="block relative aspect-[4/5] overflow-hidden rounded-xl mb-3 sm:mb-6 z-10 bg-background shadow-2xl">
