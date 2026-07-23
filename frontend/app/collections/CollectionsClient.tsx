@@ -319,14 +319,27 @@ export default function CollectionsClient({ initialProducts }: { initialProducts
             {isMobileFiltersOpen && (
               <div className="fixed inset-0 z-[100] lg:hidden flex">
                 <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setIsMobileFiltersOpen(false)} />
-                <div className="relative w-[85%] max-w-sm bg-background h-full overflow-y-auto p-8 border-r border-foreground/10 shadow-2xl flex flex-col">
-                  <div className="flex justify-between items-center mb-8">
+                <div className="relative w-[85%] max-w-sm bg-background h-full flex flex-col border-r border-foreground/10 shadow-2xl">
+                  {/* Sticky header */}
+                  <div className="flex justify-between items-center px-6 py-4 border-b border-foreground/10 flex-shrink-0">
                     <span className="text-gold font-serif text-xl font-bold tracking-widest">Filters</span>
-                    <button onClick={() => setIsMobileFiltersOpen(false)} className="text-foreground/50 hover:text-foreground transition-colors">
-                      <X className="w-6 h-6" />
+                    <button onClick={() => setIsMobileFiltersOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-full border border-foreground/20 text-foreground">
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
-                  {filterSidebar}
+                  {/* Scrollable filter content */}
+                  <div className="flex-1 overflow-y-auto px-6 py-4">
+                    {filterSidebar}
+                  </div>
+                  {/* Fixed bottom — View Results button */}
+                  <div className="px-6 py-4 border-t border-foreground/10 flex-shrink-0">
+                    <button
+                      onClick={() => setIsMobileFiltersOpen(false)}
+                      className="w-full bg-gold text-background py-4 text-xs font-bold tracking-[0.3em] uppercase"
+                    >
+                      VIEW RESULTS
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

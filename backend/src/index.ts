@@ -127,12 +127,3 @@ app.listen(ENV.PORT, async () => {
   }
   console.log(`Server running on port ${ENV.PORT}`)
 })
-// Keep Neon DB alive by pinging every 2 minutes (Neon free tier suspends after ~5 min idle).
-// Harmless to leave on once you upgrade Neon / disable auto-suspend.
-setInterval(async () => {
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-  } catch (e) {
-    console.log('DB keepalive failed:', e);
-  }
-}, 2 * 60 * 1000);
