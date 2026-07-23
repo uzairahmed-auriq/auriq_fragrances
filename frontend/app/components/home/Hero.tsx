@@ -3,13 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import PromotionalCards from "./PromotionalCards";
+import { useSettings } from "../../context/SettingsContext";
 
-export default function Hero({ settings = {} }: { settings?: Record<string, string> }) {
+export default function Hero() {
+  const settings = useSettings();
 
   const title = settings.HERO_TITLE || "AURIQ";
   const subtitle = settings.HERO_SUBTITLE || `"Essence In Motion"`;
   const description = settings.HERO_DESCRIPTION || "A premium fragrance experience crafted for those who appreciate elegance, sophistication, and timeless luxury.";
-  
+
   const cta1Text = settings.HERO_CTA1_TEXT || "EXPLORE COLLECTION";
   const cta1Link = settings.HERO_CTA1_LINK || "/collections";
 
@@ -43,8 +45,8 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
       {/* Hero Content */}
       <div className="relative z-10 container-lux flex-1 flex flex-col items-center justify-center text-center mt-12 mb-16">
         <div className="relative w-[95%] sm:w-[90%] max-w-5xl md:max-w-6xl lg:max-w-screen-2xl h-48 md:h-64 lg:h-96 mb-0 mt-6" style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
-          <Image 
-            src="/hero-logo.png" 
+          <Image
+            src="/hero-logo.png"
             alt={title}
             fill
             className="object-contain"
@@ -52,8 +54,8 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
           />
         </div>
         <div className="relative w-[260px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-[44px] sm:h-[60px] md:h-[80px] lg:h-[100px] -mt-2 md:-mt-6 mb-6">
-          <Image 
-            src="/Essence_in_motion.png" 
+          <Image
+            src="/Essence_in_motion.png"
             alt={subtitle || "Essence In Motion"}
             fill
             className="object-contain drop-shadow-md"
@@ -63,16 +65,16 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
         <p className="max-w-2xl text-white/90 text-sm md:text-base leading-relaxed mb-10 drop-shadow-md">
           {description}
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-6 mb-16">
-          <Link 
-            href={cta1Link} 
+          <Link
+            href={cta1Link}
             className="px-10 py-4 bg-white/90 backdrop-blur-sm text-black font-medium tracking-wide hover:bg-gold hover:text-black transition-colors duration-300 text-sm shadow-xl uppercase"
           >
             {cta1Text}
           </Link>
-          <Link 
-            href="/about" 
+          <Link
+            href="/about"
             className="px-10 py-4 border border-white/80 text-white font-medium tracking-wide hover:bg-white hover:text-black transition-colors duration-300 text-sm shadow-xl backdrop-blur-sm uppercase"
           >
             OUR STORY
@@ -87,4 +89,3 @@ export default function Hero({ settings = {} }: { settings?: Record<string, stri
     </section>
   );
 }
-

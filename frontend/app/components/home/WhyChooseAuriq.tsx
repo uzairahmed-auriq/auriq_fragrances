@@ -1,15 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Award, ShieldCheck, Truck, Smile } from "lucide-react";
-import { publicSettingsService } from "../../services/publicSettingsService";
+import { useSettings } from "../../context/SettingsContext";
 
 export default function WhyChooseAuriq() {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then(setSettings);
-  }, []);
+  const settings = useSettings();
 
   const title = settings.WHY_CHOOSE_TITLE || "The Auriq Standard";
 

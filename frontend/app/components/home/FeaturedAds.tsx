@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { publicSettingsService } from "../../services/publicSettingsService";
+import { useSettings } from "../../context/SettingsContext";
 
-export default function FeaturedAds({ ads = [], settings = {} }: { ads?: any[], settings?: Record<string, string> }) {
+export default function FeaturedAds({ ads = [] }: { ads?: any[] }) {
+  const settings = useSettings();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 

@@ -8,27 +8,25 @@ import OurStory from "./components/home/OurStory";
 import ContactFeedback from "./components/home/ContactFeedback";
 import { productService } from "./services/productService";
 import { adService } from "./services/adService";
+
 export default async function Home() {
-  // Fetch dynamic data in parallel
-  const [featuredData, adsData, settingsData, allProductsData] = await Promise.all([
+  const [featuredData, adsData, allProductsData] = await Promise.all([
     productService.getFeaturedProducts().catch(() => ({ data: [] })),
     adService.getActiveAds().catch(() => ({ data: [] })),
-    import('./services/publicSettingsService').then(m => m.publicSettingsService.getSettingsByGroup("HOMEPAGE")).catch(() => ({})),
     productService.getAllProducts().catch(() => ({ data: [] }))
   ]);
 
-  let featuredProducts = featuredData.data || [];
+  const featuredProducts = featuredData.data || [];
   const ads = adsData.data || [];
-  const settings = settingsData || {};
   const allProducts = allProductsData.data || [];
 
   return (
     <>
       <Header />
-      
+
       <main className="flex-1 w-full">
-        <FeaturedAds ads={ads} settings={settings} />
-        <Hero settings={settings} />
+        <FeaturedAds ads={ads} />
+        <Hero />
         <FeaturedCollection products={featuredProducts} />
         <FeaturedGrid products={allProducts} />
         <OurStory />

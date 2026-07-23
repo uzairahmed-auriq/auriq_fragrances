@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import ProductCardActions from "./ProductCardActions";
-import { publicSettingsService } from "../../services/publicSettingsService";
 
 export default function BestSellers({ products = [] }: { products?: any[] }) {
-  const [settings, setSettings] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    publicSettingsService.getSettingsByGroup("HOMEPAGE").then(setSettings);
-  }, []);
+  const settings: Record<string, string> = {};
 
   if (!products || products.length === 0) return null; // Hide section if no data yet
 
