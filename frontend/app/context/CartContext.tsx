@@ -47,6 +47,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Only fetch cart if user has a token or guest session
     const hasSession = localStorage.getItem('auriqAccessToken') || localStorage.getItem('auriqGuestSessionId');
     if (hasSession) refreshCart();
+    else setIsLoading(false);
     window.addEventListener('loginStateChange', refreshCart);
     return () => {
       window.removeEventListener('loginStateChange', refreshCart);
