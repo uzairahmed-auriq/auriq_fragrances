@@ -6,12 +6,14 @@ import { useState, useEffect } from "react";
 import Modal from "../../components/ui/Modal";
 import { adminProductService } from "../services/adminProductService";
 import { useAdminToast } from "../context/AdminToastContext";
+import { API_URL } from "../../utils/api";
 
 export default function AdminProducts() {
   const { success: toastSuccess, error: toastError } = useAdminToast();
   const [isAddProductOpen, setIsAddProductOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -45,7 +47,26 @@ export default function AdminProducts() {
     }
   };
 
-  useEffect(() => { fetchProducts(); }, []);
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch(`${API_URL}/categories`);
+      const data = await res.json();
+      if (data.success) setCategories(data.data);
+    } catch (err) {
+      console.warn("Failed to load categories:", err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  useEffect(() => { fetchProducts(); fetchCategories(); }, []);
+
+  // Derive product gender from the selected category (slug-based, resilient to real DB ids)
+  const genderForCategory = (categoryId: string) => {
+    const cat = categories.find(c => c.id.toString() === categoryId);
+    const slug = (cat?.slug || cat?.name || '').toLowerCase();
+    if (slug.includes('men') && !slug.includes('women')) return 'MALE';
+    if (slug.includes('women')) return 'FEMALE';
+    return 'UNISEX';
+  };
 
   useEffect(() => {
     if (editingProduct) {
@@ -150,8 +171,7 @@ export default function AdminProducts() {
       formData.append('notes_json', JSON.stringify(notes));
       ['top_notes','heart_notes','base_notes'].forEach(k => formData.delete(k));
 
-      const catGender: Record<string, string> = { '1': 'MALE', '2': 'FEMALE', '3': 'UNISEX' };
-      formData.append('gender', catGender[formData.get('category_id') as string] || 'UNISEX');
+      formData.append('gender', genderForCategory(formData.get('category_id') as string));
 
       const res = await adminProductService.create(formData);
       if (res.success) {
@@ -203,8 +223,7 @@ export default function AdminProducts() {
     formData.append('notes_json', JSON.stringify(notes));
     ['top_notes','heart_notes','base_notes'].forEach(k => formData.delete(k));
 
-    const catGender: Record<string, string> = { '1': 'MALE', '2': 'FEMALE', '3': 'UNISEX' };
-    formData.append('gender', catGender[formData.get('category_id') as string] || 'UNISEX');
+    formData.append('gender', genderForCategory(formData.get('category_id') as string));
 
     const res = await adminProductService.update(editingProduct.id, formData);
     if (res.success) {
@@ -260,9 +279,7 @@ export default function AdminProducts() {
         <div className="flex items-center gap-4 w-full md:w-auto">
           <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="flex-1 md:flex-none border border-foreground/10 bg-background px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:border-gold transition-colors text-foreground/80 focus:outline-none focus:border-gold">
             <option value="">All Categories</option>
-            <option value="1">Men</option>
-            <option value="2">Women</option>
-            <option value="3">Unisex</option>
+            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="flex-1 md:flex-none border border-foreground/10 bg-background px-4 py-2 rounded-lg text-xs font-bold tracking-widest uppercase hover:border-gold transition-colors text-foreground/80 focus:outline-none focus:border-gold">
             <option value="">All Types</option>
@@ -392,9 +409,7 @@ export default function AdminProducts() {
         <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Category</label>
         <select name="category_id" className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground *:bg-background" required>
           <option value="">Select category</option>
-          <option value="1">Men</option>
-          <option value="2">Women</option>
-          <option value="3">Unisex</option>
+          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
       <div className="flex flex-col gap-2">
@@ -505,9 +520,7 @@ export default function AdminProducts() {
         <div className="flex flex-col gap-2">
           <label className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Category</label>
           <select name="category_id" defaultValue={editingProduct.category_id?.toString()} className="bg-transparent border border-foreground/20 rounded-lg px-4 py-2 text-sm focus:border-gold outline-none text-foreground *:bg-background" required>
-            <option value="1">Men</option>
-            <option value="2">Women</option>
-            <option value="3">Unisex</option>
+            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div className="flex flex-col gap-2">
